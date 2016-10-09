@@ -1,0 +1,21 @@
+{
+    "name": "d3yii2/yii2-d3acc",
+    "description": "Accounting",
+    "type": "yii2-extension",
+    "keywords": ["accountig"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Uldis Nelsons",
+            "email": "uldis@weberp.lv"
+        }
+    ],
+    "require": {
+        "yiisoft/yii2": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "d3acc\\": ""
+        }
+    }
+}
