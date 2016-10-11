@@ -133,8 +133,15 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $period = AcPeriod::getActivePeriod(self::PERIOD_TYPE, '2016-10-02');
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
-        $tran = AcTran::registre($recAccDebit, $recAccCredit, 100, '2016.10.11',
+        $amt = 100;
+        $tran = AcTran::registre($recAccDebit, $recAccCredit, $amt, '2016.10.11',
                 self::PERIOD_TYPE);
         $this->assertInstanceOf('\d3acc\models\AcTran', $tran);
+
+        $debitBalance = AcTran::accPeriodBalance($recAccDebit, $period);
+        $this->assertEquals($amt,-$debitBalance);
+        $creditBalance = AcTran::accPeriodBalance($recAccCredit, $period);
+        $this->assertEquals($amt,$creditBalance);
+
     }
 }

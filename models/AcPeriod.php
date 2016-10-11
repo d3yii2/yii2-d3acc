@@ -32,12 +32,15 @@ class AcPeriod extends BaseAcPeriod
         );
     }
 
-    public static function getActivePeriod($periodType, $date)
+    public static function getActivePeriod($periodType, $date = false)
     {
-        return self::find()
-                ->where(['period_type' => $periodType])
-                ->andWhere(['status' => self::STATUS_ACTIVE])
-                ->andWhere(" '".$date."' >= `from` and  '".$date."' <= `to`")
-                ->one();
+        $query = self::find()
+            ->where(['period_type' => $periodType])
+            ->andWhere(['status' => self::STATUS_ACTIVE]);
+        if ($date) {
+            $query->andWhere(" '".$date."' >= `from` and  '".$date."' <= `to`");
+        }
+
+        return $query->one();
     }
 }
