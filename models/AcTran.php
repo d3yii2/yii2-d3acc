@@ -111,4 +111,87 @@ class AcTran extends BaseAcTran
         return $command->queryScalar();
     }
 
+    /**
+     * get account balance for period grouped by days
+     * @param \d3acc\models\AcRecAcc $acc
+     * @param \d3acc\models\AcPeriod $period
+     * @return decimal
+     */
+    public static function accPeriodBalanceByDays(AcRecAcc $acc,AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand('
+            SELECT
+              accounting_date `date`,
+              IFNULL(SUM(
+                CASE
+                  :acc_id
+                  WHEN debit_rec_acc_id
+                  THEN - amount
+                  ELSE amount
+                END
+              ),0) amount
+            FROM
+              ac_tran
+            WHERE
+                period_id = :period_id
+                AND  (
+                    debit_rec_acc_id = :acc_id
+                    OR
+                    credit_rec_acc_id = :acc_id
+                    )
+            GROUP BY
+                accounting_date
+            ORDER BY
+                accounting_date
+          ', [
+              ':acc_id' => $acc->id,
+              ':period_id' => $period->id,
+              ]);
+
+        return $command->queryAll();
+    }
+    /**
+     * get account balance for period filtered by other account and grouped by days
+     * @param \d3acc\models\AcRecAcc $acc
+     * @param \d3acc\models\AcRecAcc $accFilter
+     * @param \d3acc\models\AcPeriod $period
+     * @return decimal
+     */
+    public static function accFilterAccPeriodBalanceByDays(AcRecAcc $acc,AcRecAcc $accFilter, AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand('
+            SELECT
+              accounting_date `date`,
+              IFNULL(SUM(
+                CASE
+                  :acc_id
+                  WHEN debit_rec_acc_id
+                  THEN - amount
+                  ELSE amount
+                END
+              ),0) amount
+            FROM
+              ac_tran
+            WHERE
+                period_id = :period_id
+                AND  (
+                    debit_rec_acc_id = :acc_id AND credit_rec_acc_id = :acc_filter_id
+                    OR
+                    credit_rec_acc_id = :acc_id AND debit_rec_acc_id = :acc_filter_id
+                    )
+            GROUP BY
+                accounting_date
+            ORDER BY
+                accounting_date
+          ', [
+              ':acc_id' => $acc->id,
+              ':acc_filter_id' => $accFilter->id,
+              ':period_id' => $period->id,
+              ]);
+
+        return $command->queryAll();
+    }
+
 }
