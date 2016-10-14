@@ -12,26 +12,6 @@ use yii\helpers\ArrayHelper;
 class AcRecAcc extends BaseAcRecAcc
 {
 
-    public function behaviors()
-    {
-        return ArrayHelper::merge(
-                parent::behaviors(),
-                [
-                # custom behaviors
-                ]
-        );
-    }
-
-    public function rules()
-    {
-        return ArrayHelper::merge(
-                parent::rules(),
-                [
-                # custom validation rules
-                ]
-        );
-    }
-
     /**
      * get record accounts
      * @param int $accId
