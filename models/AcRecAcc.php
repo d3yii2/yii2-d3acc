@@ -46,9 +46,8 @@ class AcRecAcc extends BaseAcRecAcc
          * create account
          */
 
-        $label[] = [$acc->name];
+        $label = [$acc->name];
         if($ref){
-            dump(\Yii::$app->getModule('d3acc'));
             $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
 
             foreach($ref as $tableName => $pkValue){

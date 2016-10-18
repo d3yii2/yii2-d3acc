@@ -85,6 +85,54 @@ class AcTran extends BaseAcTran
      * @param \d3acc\models\AcPeriod $period
      * @return decimal
      */
+    public static function periodBalance(AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand('
+                SELECT
+                  rec_acc_id,
+                  ra.label,
+                  SUM(amount) amount
+                FROM
+                  (SELECT
+                    debit_rec_acc_id rec_acc_id,
+                    - IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY debit_rec_acc_id
+                  UNION
+                  SELECT
+                    credit_rec_acc_id rec_acc_id,
+                    IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY credit_rec_acc_id
+                  UNION
+                  SELECT
+                    rec_acc_id,
+                    amount
+                  FROM
+                    ac_period_balance
+                  WHERE period_id = :prev_period_id) a
+                  INNER JOIN ac_rec_acc ra
+                    ON a.rec_acc_id = ra.id
+                GROUP BY rec_acc_id 
+          ', [
+              ':period_id' => $period->id,
+              ]);
+
+        return  $command->queryAll();
+
+
+    }
+    /**
+     * get account balance for period
+     * @param \d3acc\models\AcRecAcc $acc
+     * @param \d3acc\models\AcPeriod $period
+     * @return decimal
+     */
     public static function accPeriodBalance(AcRecAcc $acc,AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
