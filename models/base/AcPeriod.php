@@ -14,7 +14,14 @@ use Yii;
  * @property string $from
  * @property string $to
  * @property string $status
+ * @property integer $prev_period
+ * @property integer $next_period
  *
+ * @property \d3acc\models\AcPeriod $nextPeriod
+ * @property \d3acc\models\AcPeriod[] $acPeriods
+ * @property \d3acc\models\AcPeriod $prevPeriod
+ * @property \d3acc\models\AcPeriod[] $acPeriods0
+ * @property \d3acc\models\AcPeriodBalance[] $acPeriodBalances
  * @property \d3acc\models\AcTran[] $acTrans
  * @property string $aliasModel
  */
@@ -46,9 +53,11 @@ abstract class AcPeriod extends \yii\db\ActiveRecord
     {
         return [
             [['period_type', 'from', 'to'], 'required'],
-            [['period_type'], 'integer'],
+            [['period_type', 'prev_period', 'next_period'], 'integer'],
             [['from', 'to'], 'safe'],
             [['status'], 'string'],
+            [['next_period'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['next_period' => 'id']],
+            [['prev_period'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['prev_period' => 'id']],
             ['status', 'in', 'range' => [
                     self::STATUS_PLANNED,
                     self::STATUS_ACTIVE,
@@ -64,11 +73,13 @@ abstract class AcPeriod extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('poker', 'ID'),
-            'period_type' => Yii::t('poker', 'Type'),
-            'from' => Yii::t('poker', 'From'),
-            'to' => Yii::t('poker', 'To'),
-            'status' => Yii::t('poker', 'Status'),
+            'id' => Yii::t('d3acc', 'ID'),
+            'period_type' => Yii::t('d3acc', 'Type'),
+            'from' => Yii::t('d3acc', 'From'),
+            'to' => Yii::t('d3acc', 'To'),
+            'status' => Yii::t('d3acc', 'Status'),
+            'prev_period' => Yii::t('d3acc', 'Previous period'),
+            'next_period' => Yii::t('d3acc', 'Next Period'),
         ];
     }
 
@@ -78,11 +89,53 @@ abstract class AcPeriod extends \yii\db\ActiveRecord
     public function attributeHints()
     {
         return array_merge(parent::attributeHints(), [
-            'period_type' => Yii::t('poker', 'Type'),
-            'from' => Yii::t('poker', 'From'),
-            'to' => Yii::t('poker', 'To'),
-            'status' => Yii::t('poker', 'Status'),
+            'period_type' => Yii::t('d3acc', 'Type'),
+            'from' => Yii::t('d3acc', 'From'),
+            'to' => Yii::t('d3acc', 'To'),
+            'status' => Yii::t('d3acc', 'Status'),
+            'prev_period' => Yii::t('d3acc', 'Previous period'),
+            'next_period' => Yii::t('d3acc', 'Next Period'),
         ]);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getNextPeriod()
+    {
+        return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'next_period'])->inverseOf('acPeriods');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAcPeriods()
+    {
+        return $this->hasMany(\d3acc\models\AcPeriod::className(), ['next_period' => 'id'])->inverseOf('nextPeriod');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPrevPeriod()
+    {
+        return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'prev_period'])->inverseOf('acPeriods0');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAcPeriods0()
+    {
+        return $this->hasMany(\d3acc\models\AcPeriod::className(), ['prev_period' => 'id'])->inverseOf('prevPeriod');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAcPeriodBalances()
+    {
+        return $this->hasMany(\d3acc\models\AcPeriodBalance::className(), ['period_id' => 'id'])->inverseOf('period');
     }
 
     /**
@@ -116,9 +169,9 @@ abstract class AcPeriod extends \yii\db\ActiveRecord
     public static function optsStatus()
     {
         return [
-            self::STATUS_PLANNED => Yii::t('poker', self::STATUS_PLANNED),
-            self::STATUS_ACTIVE => Yii::t('poker', self::STATUS_ACTIVE),
-            self::STATUS_CLOSED => Yii::t('poker', self::STATUS_CLOSED),
+            self::STATUS_PLANNED => Yii::t('d3acc', self::STATUS_PLANNED),
+            self::STATUS_ACTIVE => Yii::t('d3acc', self::STATUS_ACTIVE),
+            self::STATUS_CLOSED => Yii::t('d3acc', self::STATUS_CLOSED),
         ];
     }
 

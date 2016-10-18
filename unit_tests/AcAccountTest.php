@@ -8,6 +8,8 @@ use d3acc\models\AcDef;
 use d3acc\models\AcRecAcc;
 use d3acc\models\AcTran;
 use d3acc\models\AcPeriod;
+use d3acc\components\PeriodBase;
+use d3acc\components\PeriodMonth;
 
 class AcAccountTest extends \PHPUnit_Framework_TestCase
 {
@@ -95,6 +97,9 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
             foreach ($recAcc->getAcTrans()->all() as $tran) {
                 $tran->delete();
             }
+            foreach($recAcc->getAcPeriodBalances()->all() as $balance){
+                $balance->delete();
+            }
             $recAcc->delete();
         }
 
@@ -102,7 +107,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
     }
 
     public function deletePeriodType($type){
-        foreach(AcPeriod::findAll(['period_type' => self::PERIOD_TYPE]) as $period){
+        foreach(AcPeriod::find()->where(['period_type' => self::PERIOD_TYPE])->orderBy(['id'=> SORT_DESC])->all() as $period){
             $period->delete();
         }
     }
@@ -118,7 +123,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
     {
         $recAccDebit = AcRecAcc::getAcc($this->acc->id,
                 ['Test01' => 1, 'Test02' => 2]);
-        $this->assertEquals($recAccDebit->getAcount()->one()->id, $this->acc->id);
+        $this->assertEquals($recAccDebit->getAccount()->one()->id, $this->acc->id);
 
         $recAcc2 = AcRecAcc::getAcc($this->acc->id,
                 ['Test01' => 1, 'Test02' => 2]);
@@ -140,8 +145,18 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
 
         $debitBalance = AcTran::accPeriodBalance($recAccDebit, $period);
         $this->assertEquals($amt,-$debitBalance);
+
         $creditBalance = AcTran::accPeriodBalance($recAccCredit, $period);
         $this->assertEquals($amt,$creditBalance);
+
+        $newPeriod = PeriodMonth::close(self::PERIOD_TYPE);
+
+        $debitBalance = AcTran::accPeriodBalance($recAccDebit, $newPeriod);
+        $this->assertEquals($amt,-$debitBalance);
+
+        $creditBalance = AcTran::accPeriodBalance($recAccCredit, $newPeriod);
+        $this->assertEquals($amt,$creditBalance);
+
 
     }
 }

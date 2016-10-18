@@ -45,9 +45,29 @@ class AcRecAcc extends BaseAcRecAcc
         /**
          * create account
          */
+
+        $label[] = [$acc->name];
+        if($ref){
+            dump(\Yii::$app->getModule('d3acc'));
+            $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
+
+            foreach($ref as $tableName => $pkValue){
+                if(!isset($tableModels[$tableAsName])){
+                    $label[] = $tableAsName . '=' . $pkValue;
+                    continue;
+                }
+                $tm = $tableModels[$tableAsName];
+                if(!method_exists($tm,'itemLabel')){
+                    $label[] = $tableAsName . '=' . $pkValue;
+                    continue;
+                }
+                $label[] = $tm::findOne($pkValue)->itemLabel();
+            }
+        }
+
         $model             = new AcRecAcc();
         $model->account_id = $accId;
-        $model->label      = json_encode($ref);
+        $model->label      = implode(', ', $label);
         $model->save();
 
         if ($ref) {

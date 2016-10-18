@@ -49,9 +49,9 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('poker', 'ID'),
-            'code' => Yii::t('poker', 'Code'),
-            'name' => Yii::t('poker', 'Name'),
+            'id' => Yii::t('d3acc', 'ID'),
+            'code' => Yii::t('d3acc', 'Code'),
+            'name' => Yii::t('d3acc', 'Name'),
         ];
     }
 
@@ -61,8 +61,8 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     public function attributeHints()
     {
         return array_merge(parent::attributeHints(), [
-            'code' => Yii::t('poker', 'Code'),
-            'name' => Yii::t('poker', 'Name'),
+            'code' => Yii::t('d3acc', 'Code'),
+            'name' => Yii::t('d3acc', 'Name'),
         ]);
     }
 
@@ -79,7 +79,7 @@ abstract class AcAccount extends \yii\db\ActiveRecord
      */
     public function getAcRecAccs()
     {
-        return $this->hasMany(\d3acc\models\AcRecAcc::className(), ['account_id' => 'id'])->inverseOf('acount');
+        return $this->hasMany(\d3acc\models\AcRecAcc::className(), ['account_id' => 'id'])->inverseOf('account');
     }
 
 

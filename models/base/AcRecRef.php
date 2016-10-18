@@ -51,10 +51,10 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('poker', 'ID'),
-            'def_id' => Yii::t('poker', 'Def ID'),
-            'rec_account_id' => Yii::t('poker', 'Rec Account ID'),
-            'pk_value' => Yii::t('poker', 'Pk Value'),
+            'id' => Yii::t('d3acc', 'ID'),
+            'def_id' => Yii::t('d3acc', 'Def ID'),
+            'rec_account_id' => Yii::t('d3acc', 'Rec Account ID'),
+            'pk_value' => Yii::t('d3acc', 'Pk Value'),
         ];
     }
 

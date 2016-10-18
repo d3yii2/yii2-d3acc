@@ -61,15 +61,15 @@ abstract class AcTran extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('poker', 'ID'),
-            'period_id' => Yii::t('poker', 'Period'),
-            'accounting_date' => Yii::t('poker', 'Accountig Date'),
-            'debit_rec_acc_id' => Yii::t('poker', 'Debit account'),
-            'credit_rec_acc_id' => Yii::t('poker', 'Credit account'),
-            'amount' => Yii::t('poker', 'Amount'),
-            'notes' => Yii::t('poker', 'Notes'),
-            't_user_id' => Yii::t('poker', 'User'),
-            't_datetime' => Yii::t('poker', 'Date'),
+            'id' => Yii::t('d3acc', 'ID'),
+            'period_id' => Yii::t('d3acc', 'Period'),
+            'accounting_date' => Yii::t('d3acc', 'Accountig Date'),
+            'debit_rec_acc_id' => Yii::t('d3acc', 'Debit account'),
+            'credit_rec_acc_id' => Yii::t('d3acc', 'Credit account'),
+            'amount' => Yii::t('d3acc', 'Amount'),
+            'notes' => Yii::t('d3acc', 'Notes'),
+            't_user_id' => Yii::t('d3acc', 'User'),
+            't_datetime' => Yii::t('d3acc', 'Date'),
         ];
     }
 
@@ -79,14 +79,14 @@ abstract class AcTran extends \yii\db\ActiveRecord
     public function attributeHints()
     {
         return array_merge(parent::attributeHints(), [
-            'period_id' => Yii::t('poker', 'Period'),
-            'accounting_date' => Yii::t('poker', 'Accountig Date'),
-            'debit_rec_acc_id' => Yii::t('poker', 'Debit account'),
-            'credit_rec_acc_id' => Yii::t('poker', 'Credit account'),
-            'amount' => Yii::t('poker', 'Amount'),
-            'notes' => Yii::t('poker', 'Notes'),
-            't_user_id' => Yii::t('poker', 'User'),
-            't_datetime' => Yii::t('poker', 'Date'),
+            'period_id' => Yii::t('d3acc', 'Period'),
+            'accounting_date' => Yii::t('d3acc', 'Accountig Date'),
+            'debit_rec_acc_id' => Yii::t('d3acc', 'Debit account'),
+            'credit_rec_acc_id' => Yii::t('d3acc', 'Credit account'),
+            'amount' => Yii::t('d3acc', 'Amount'),
+            'notes' => Yii::t('d3acc', 'Notes'),
+            't_user_id' => Yii::t('d3acc', 'User'),
+            't_datetime' => Yii::t('d3acc', 'Date'),
         ]);
     }
 

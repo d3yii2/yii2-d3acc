@@ -1,7 +1,6 @@
 {
     "name": "d3yii2/yii2-d3acc",
     "description": "Accounting",
-    "type": "yii2-extension",
     "keywords": ["accountig"],
     "license": "MIT",
     "authors": [
@@ -11,6 +10,7 @@
         }
     ],
     "require": {
+        "php": ">=5.4.0",
         "yiisoft/yii2": "*"
     },
     "autoload": {

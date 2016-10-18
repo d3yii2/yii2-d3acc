@@ -51,10 +51,10 @@ abstract class AcDef extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('poker', 'ID'),
-            'account_id' => Yii::t('poker', 'Account'),
-            'table' => Yii::t('poker', 'Table'),
-            'pk_field' => Yii::t('poker', 'Primary key field'),
+            'id' => Yii::t('d3acc', 'ID'),
+            'account_id' => Yii::t('d3acc', 'Account'),
+            'table' => Yii::t('d3acc', 'Table'),
+            'pk_field' => Yii::t('d3acc', 'Primary key field'),
         ];
     }
 
@@ -64,9 +64,9 @@ abstract class AcDef extends \yii\db\ActiveRecord
     public function attributeHints()
     {
         return array_merge(parent::attributeHints(), [
-            'account_id' => Yii::t('poker', 'Account'),
-            'table' => Yii::t('poker', 'Table'),
-            'pk_field' => Yii::t('poker', 'Primary key field'),
+            'account_id' => Yii::t('d3acc', 'Account'),
+            'table' => Yii::t('d3acc', 'Table'),
+            'pk_field' => Yii::t('d3acc', 'Primary key field'),
         ]);
     }
 

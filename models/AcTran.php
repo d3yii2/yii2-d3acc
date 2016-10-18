@@ -108,7 +108,9 @@ class AcTran extends BaseAcTran
               ':period_id' => $period->id,
               ]);
 
-        return $command->queryScalar();
+        $actualBalance =  $command->queryScalar();
+
+        return AcPeriodBalance::accPeriodBalance($acc, $period) + $command->queryScalar();
     }
 
     /**
@@ -149,7 +151,14 @@ class AcTran extends BaseAcTran
               ':period_id' => $period->id,
               ]);
 
-        return $command->queryAll();
+        $days = $command->queryAll();
+        $periodDays = $period->getDates();
+        if(!isset($days[$periodDays])){
+            $days[$periodDays] = 0;
+        }
+        $days[$periodDays] += AcPeriodBalance::accPeriodBalance($acc, $period);
+
+        return $days;
     }
     /**
      * get account balance for period filtered by other account and grouped by days

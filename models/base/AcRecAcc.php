@@ -13,7 +13,8 @@ use Yii;
  * @property integer $account_id
  * @property string $label
  *
- * @property \d3acc\models\AcAccount $acount
+ * @property \d3acc\models\AcPeriodBalance[] $acPeriodBalances
+ * @property \d3acc\models\AcAccount $account
  * @property \d3acc\models\AcRecRef[] $acRecRefs
  * @property \d3acc\models\AcTran[] $acTrans
  * @property \d3acc\models\AcTran[] $acTrans0
@@ -52,9 +53,9 @@ abstract class AcRecAcc extends \yii\db\ActiveRecord
     public function attributeLabels()
     {
         return [
-            'id' => Yii::t('poker', 'ID'),
-            'account_id' => Yii::t('poker', 'Account'),
-            'label' => Yii::t('poker', 'Label'),
+            'id' => Yii::t('d3acc', 'ID'),
+            'account_id' => Yii::t('d3acc', 'Account'),
+            'label' => Yii::t('d3acc', 'Label'),
         ];
     }
 
@@ -64,15 +65,23 @@ abstract class AcRecAcc extends \yii\db\ActiveRecord
     public function attributeHints()
     {
         return array_merge(parent::attributeHints(), [
-            'account_id' => Yii::t('poker', 'Account'),
-            'label' => Yii::t('poker', 'Label'),
+            'account_id' => Yii::t('d3acc', 'Account'),
+            'label' => Yii::t('d3acc', 'Label'),
         ]);
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getAcount()
+    public function getAcPeriodBalances()
+    {
+        return $this->hasMany(\d3acc\models\AcPeriodBalance::className(), ['rec_acc_id' => 'id'])->inverseOf('recAcc');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAccount()
     {
         return $this->hasOne(\d3acc\models\AcAccount::className(), ['id' => 'account_id'])->inverseOf('acRecAccs');
     }

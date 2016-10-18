@@ -46,7 +46,7 @@ class PeriodMonthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($activePeriod->id, $period->id);
 
         //ADD NEXT
-        $period = PeriodMonth::addNext(self::PERIOD_TYPE);
+        $period = PeriodMonth::close(self::PERIOD_TYPE);
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
         //VALIDATE ACTIVE PERIOD

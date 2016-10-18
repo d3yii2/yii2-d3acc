@@ -22,7 +22,7 @@ class PeriodHalfMonthTest extends \PHPUnit_Framework_TestCase
 
     public function deletePeriodType($type)
     {
-        foreach (AcPeriod::findAll(['period_type' => $type]) as $period) {
+        foreach (AcPeriod::find()->where(['period_type' => $type])->orderBy(['id'=> SORT_DESC])->all() as $period) {
             $period->delete();
         }
     }
@@ -38,7 +38,7 @@ class PeriodHalfMonthTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($activePeriod->id, $period->id);
 
         //ADD NEXT
-        $period = PeriodHalfMonth::addNext(self::PERIOD_TYPE);
+        $period = PeriodHalfMonth::close(self::PERIOD_TYPE);
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
         //VALIDATE ACTIVE PERIOD

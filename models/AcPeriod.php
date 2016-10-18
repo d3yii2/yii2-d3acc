@@ -83,4 +83,14 @@ class AcPeriod extends BaseAcPeriod
             ->orderBy(['from' => SORT_DESC])
              ->one();
     }
+
+    public function delete()
+    {
+        if($prev = $this->getPrevPeriod()->one()){
+            $prev->next_period = null;
+            $prev->save();
+        }
+        
+        return parent::delete();
+    }
 }
