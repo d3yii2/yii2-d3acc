@@ -45,19 +45,20 @@ class AcRecAcc extends BaseAcRecAcc
         /**
          * create account
          */
-
+        $db = \Yii::$app->db;
+        $transaction = $db->beginTransaction();
         $label = [$acc->name];
         if($ref){
             $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
 
             foreach($ref as $tableName => $pkValue){
-                if(!isset($tableModels[$tableAsName])){
-                    $label[] = $tableAsName . '=' . $pkValue;
+                if(!isset($tableModels[$tableName])){
+                    $label[] = $tableName . '=' . $pkValue;
                     continue;
                 }
-                $tm = $tableModels[$tableAsName];
+                $tm = $tableModels[$tableName];
                 if(!method_exists($tm,'itemLabel')){
-                    $label[] = $tableAsName . '=' . $pkValue;
+                    $label[] = $tableName . '=' . $pkValue;
                     continue;
                 }
                 $label[] = $tm::findOne($pkValue)->itemLabel();
@@ -67,7 +68,10 @@ class AcRecAcc extends BaseAcRecAcc
         $model             = new AcRecAcc();
         $model->account_id = $accId;
         $model->label      = implode(', ', $label);
-        $model->save();
+        if(!$model->save()){
+            $transaction->rolback();
+            throw new \Exception('Error: ' .json_encode($model->getErrors()));
+        }
 
         if ($ref) {
             foreach ($acc->getAcDefs()->all() as $acDef) {
@@ -75,9 +79,15 @@ class AcRecAcc extends BaseAcRecAcc
                 $modelRecRef->def_id         = $acDef->id;
                 $modelRecRef->rec_account_id = $model->id;
                 $modelRecRef->pk_value       = $ref[$acDef->table];
-                $modelRecRef->save();
+                if(!$modelRecRef->save()){
+                    $transaction->rolback();
+                    throw new \Exception('Error: ' .json_encode($modelRecRef->getErrors()));
+
+                }
             }
         }
+
+        $transaction->commit();
 
         return $model;
     }

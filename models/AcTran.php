@@ -13,26 +13,6 @@ use yii\db\Expression;
 class AcTran extends BaseAcTran
 {
 
-    public function behaviors()
-    {
-        return ArrayHelper::merge(
-                parent::behaviors(),
-                [
-                # custom behaviors
-                ]
-        );
-    }
-
-    public function rules()
-    {
-        return ArrayHelper::merge(
-                parent::rules(),
-                [
-                # custom validation rules
-                ]
-        );
-    }
-
     /**
      * registre transaction
      * @param \d3acc\models\AcRecAcc $debitAcc
@@ -81,7 +61,6 @@ class AcTran extends BaseAcTran
 
     /**
      * get account balance for period
-     * @param \d3acc\models\AcRecAcc $acc
      * @param \d3acc\models\AcPeriod $period
      * @return decimal
      */
@@ -118,9 +97,11 @@ class AcTran extends BaseAcTran
                   WHERE period_id = :prev_period_id) a
                   INNER JOIN ac_rec_acc ra
                     ON a.rec_acc_id = ra.id
-                GROUP BY rec_acc_id 
+                GROUP BY rec_acc_id
+                order by ra.label
           ', [
               ':period_id' => $period->id,
+              ':prev_period_id' => $period->prev_period,
               ]);
 
         return  $command->queryAll();
@@ -159,6 +140,50 @@ class AcTran extends BaseAcTran
         $actualBalance =  $command->queryScalar();
 
         return AcPeriodBalance::accPeriodBalance($acc, $period) + $command->queryScalar();
+    }
+
+    public static function accPeriodTran(AcRecAcc $acc,AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command = $connection->createCommand('
+            SELECT
+              accounting_date,
+              CASE
+                ac_tran.debit_rec_acc_id
+                WHEN :acc_id
+                THEN - amount
+                ELSE + amount
+              END amount,
+              CASE
+                ac_tran.debit_rec_acc_id
+                WHEN :acc_id
+                THEN c.label 
+                ELSE d.label 
+              END acc_label
+            FROM
+              ac_tran
+              INNER JOIN ac_rec_acc d
+                ON ac_tran.debit_rec_acc_id = d.id
+              INNER JOIN ac_rec_acc c
+                ON ac_tran.credit_rec_acc_id = c.id
+            WHERE
+                period_id = :period_id
+                    AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
+            ORDER BY t_datetime
+          ', [
+              ':acc_id' => $acc->id,
+              ':period_id' => $period->id,
+              ]);
+
+        $tran =  $command->queryAll();
+        $startRecord = [
+            'amount' => AcPeriodBalance::accPeriodBalance($acc, $period),
+            'acc_label' => 'Start amount',
+            'accounting_date' => ''
+            ];
+        $a =  array_merge([$startRecord], $tran);
+        return $a;
+
     }
 
     /**
