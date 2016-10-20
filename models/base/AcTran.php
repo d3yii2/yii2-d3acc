@@ -15,13 +15,16 @@ use Yii;
  * @property integer $debit_rec_acc_id
  * @property integer $credit_rec_acc_id
  * @property string $amount
+ * @property string $code
  * @property string $notes
  * @property integer $t_user_id
  * @property string $t_datetime
+ * @property string $ref_table
+ * @property string $ref_id
  *
- * @property \d3acc\models\AcPeriod $period
  * @property \d3acc\models\AcRecAcc $debitRecAcc
  * @property \d3acc\models\AcRecAcc $creditRecAcc
+ * @property \d3acc\models\AcPeriod $period
  * @property string $aliasModel
  */
 abstract class AcTran extends \yii\db\ActiveRecord
@@ -45,13 +48,15 @@ abstract class AcTran extends \yii\db\ActiveRecord
     {
         return [
             [['period_id', 'accounting_date', 'debit_rec_acc_id', 'credit_rec_acc_id', 'amount', 't_user_id', 't_datetime'], 'required'],
-            [['period_id', 'debit_rec_acc_id', 'credit_rec_acc_id', 't_user_id'], 'integer'],
+            [['period_id', 'debit_rec_acc_id', 'credit_rec_acc_id', 't_user_id', 'ref_id'], 'integer'],
             [['accounting_date', 't_datetime'], 'safe'],
             [['amount'], 'number'],
             [['notes'], 'string'],
-            [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['period_id' => 'id']],
+            [['code'], 'string', 'max' => 20],
+            [['ref_table'], 'string', 'max' => 256],
             [['debit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['debit_rec_acc_id' => 'id']],
-            [['credit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['credit_rec_acc_id' => 'id']]
+            [['credit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['credit_rec_acc_id' => 'id']],
+            [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['period_id' => 'id']]
         ];
     }
 
@@ -67,9 +72,12 @@ abstract class AcTran extends \yii\db\ActiveRecord
             'debit_rec_acc_id' => Yii::t('d3acc', 'Debit account'),
             'credit_rec_acc_id' => Yii::t('d3acc', 'Credit account'),
             'amount' => Yii::t('d3acc', 'Amount'),
+            'code' => Yii::t('d3acc', 'Code'),
             'notes' => Yii::t('d3acc', 'Notes'),
             't_user_id' => Yii::t('d3acc', 'User'),
             't_datetime' => Yii::t('d3acc', 'Date'),
+            'ref_table' => Yii::t('d3acc', 'RefTable'),
+            'ref_id' => Yii::t('d3acc', 'RefId'),
         ];
     }
 
@@ -84,18 +92,13 @@ abstract class AcTran extends \yii\db\ActiveRecord
             'debit_rec_acc_id' => Yii::t('d3acc', 'Debit account'),
             'credit_rec_acc_id' => Yii::t('d3acc', 'Credit account'),
             'amount' => Yii::t('d3acc', 'Amount'),
+            'code' => Yii::t('d3acc', 'Code'),
             'notes' => Yii::t('d3acc', 'Notes'),
             't_user_id' => Yii::t('d3acc', 'User'),
             't_datetime' => Yii::t('d3acc', 'Date'),
+            'ref_table' => Yii::t('d3acc', 'RefTable'),
+            'ref_id' => Yii::t('d3acc', 'RefId'),
         ]);
-    }
-
-    /**
-     * @return \yii\db\ActiveQuery
-     */
-    public function getPeriod()
-    {
-        return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'period_id'])->inverseOf('acTrans');
     }
 
     /**
@@ -112,6 +115,14 @@ abstract class AcTran extends \yii\db\ActiveRecord
     public function getCreditRecAcc()
     {
         return $this->hasOne(\d3acc\models\AcRecAcc::className(), ['id' => 'credit_rec_acc_id'])->inverseOf('acTrans0');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getPeriod()
+    {
+        return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'period_id'])->inverseOf('acTrans');
     }
 
 

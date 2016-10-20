@@ -21,10 +21,12 @@ class AcTran extends BaseAcTran
      * @param date $date
      * @param int $periodType
      * @return \d3acc\models\AcTran
+     * @return string $code transaction code
      * @throws \Exception
      */
-    public static function registre(AcRecAcc $debitAcc, AcRecAcc $creditAcc,
-                                    $amt, $date, $periodType)
+    public static function registre(
+    AcRecAcc $debitAcc, AcRecAcc $creditAcc, $amt, $date, $periodType, $code = false
+    )
     {
         if (!$debitAcc) {
             throw new \Exception('Undefined debit account');
@@ -52,6 +54,9 @@ class AcTran extends BaseAcTran
         $model->amount            = $amt;
         $model->t_user_id         = 7;
         $model->t_datetime        = new Expression('NOW()');
+        if($code){
+            $model->code        = $code;
+        }
         if (!$model->save()) {
             throw new \Exception('Can not create transaction: '.json_encode($model->getErrors()));
         }
@@ -67,11 +72,12 @@ class AcTran extends BaseAcTran
     public static function periodBalance(AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand('
+        $command    = $connection->createCommand('
                 SELECT
                   rec_acc_id,
                   ra.label,
                   SUM(amount) amount
+
                 FROM
                   (SELECT
                     debit_rec_acc_id rec_acc_id,
@@ -99,25 +105,25 @@ class AcTran extends BaseAcTran
                     ON a.rec_acc_id = ra.id
                 GROUP BY rec_acc_id
                 order by ra.label
-          ', [
-              ':period_id' => $period->id,
-              ':prev_period_id' => $period->prev_period,
-              ]);
+          ',
+            [
+            ':period_id' => $period->id,
+            ':prev_period_id' => $period->prev_period,
+        ]);
 
-        return  $command->queryAll();
-
-
+        return $command->queryAll();
     }
+
     /**
      * get account balance for period
      * @param \d3acc\models\AcRecAcc $acc
      * @param \d3acc\models\AcPeriod $period
      * @return decimal
      */
-    public static function accPeriodBalance(AcRecAcc $acc,AcPeriod $period)
+    public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand('
+        $command    = $connection->createCommand('
             SELECT
               IFNULL(SUM(
                 CASE
@@ -132,20 +138,21 @@ class AcTran extends BaseAcTran
             WHERE
             period_id = :period_id
             AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
-          ', [
-              ':acc_id' => $acc->id,
-              ':period_id' => $period->id,
-              ]);
+          ',
+            [
+            ':acc_id' => $acc->id,
+            ':period_id' => $period->id,
+        ]);
 
-        $actualBalance =  $command->queryScalar();
+        $actualBalance = $command->queryScalar();
 
         return AcPeriodBalance::accPeriodBalance($acc, $period) + $command->queryScalar();
     }
 
-    public static function accPeriodTran(AcRecAcc $acc,AcPeriod $period)
+    public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand('
+        $command    = $connection->createCommand('
             SELECT
               accounting_date,
               CASE
@@ -159,7 +166,11 @@ class AcTran extends BaseAcTran
                 WHEN :acc_id
                 THEN c.label 
                 ELSE d.label 
-              END acc_label
+              END acc_label,
+              code,
+              notes,
+              ref_table,
+              ref_id
             FROM
               ac_tran
               INNER JOIN ac_rec_acc d
@@ -170,20 +181,24 @@ class AcTran extends BaseAcTran
                 period_id = :period_id
                     AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
             ORDER BY t_datetime
-          ', [
-              ':acc_id' => $acc->id,
-              ':period_id' => $period->id,
-              ]);
+          ',
+            [
+            ':acc_id' => $acc->id,
+            ':period_id' => $period->id,
+        ]);
 
-        $tran =  $command->queryAll();
+        $tran        = $command->queryAll();
         $startRecord = [
             'amount' => AcPeriodBalance::accPeriodBalance($acc, $period),
             'acc_label' => 'Start amount',
-            'accounting_date' => ''
-            ];
-        $a =  array_merge([$startRecord], $tran);
+            'accounting_date' => '',
+            'code' => '',
+            'notes' => '',
+            'ref_table' => '',
+            'ref_id' => '',
+        ];
+        $a           = array_merge([$startRecord], $tran);
         return $a;
-
     }
 
     /**
@@ -192,10 +207,11 @@ class AcTran extends BaseAcTran
      * @param \d3acc\models\AcPeriod $period
      * @return decimal
      */
-    public static function accPeriodBalanceByDays(AcRecAcc $acc,AcPeriod $period)
+    public static function accPeriodBalanceByDays(AcRecAcc $acc,
+                                                  AcPeriod $period, $addPrevToFirstDay = true)
     {
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand('
+        $command    = $connection->createCommand('
             SELECT
               accounting_date `date`,
               IFNULL(SUM(
@@ -219,20 +235,25 @@ class AcTran extends BaseAcTran
                 accounting_date
             ORDER BY
                 accounting_date
-          ', [
-              ':acc_id' => $acc->id,
-              ':period_id' => $period->id,
-              ]);
+          ',
+            [
+            ':acc_id' => $acc->id,
+            ':period_id' => $period->id,
+        ]);
 
-        $days = $command->queryAll();
-        $periodDays = $period->getDates();
-        if(!isset($days[$periodDays])){
-            $days[$periodDays] = 0;
+        $days       = $command->queryAll();
+
+        if($addPrevToFirstDay){
+            $periodDays = $period->getDates();
+            if (!isset($days[$periodDays[0]])) {
+                $days[$periodDays[0]] = 0;
+            }
+            $days[$periodDays[0]] += AcPeriodBalance::accPeriodBalance($acc, $period);
         }
-        $days[$periodDays] += AcPeriodBalance::accPeriodBalance($acc, $period);
 
         return $days;
     }
+
     /**
      * get account balance for period filtered by other account and grouped by days
      * @param \d3acc\models\AcRecAcc $acc
@@ -240,10 +261,12 @@ class AcTran extends BaseAcTran
      * @param \d3acc\models\AcPeriod $period
      * @return decimal
      */
-    public static function accFilterAccPeriodBalanceByDays(AcRecAcc $acc,AcRecAcc $accFilter, AcPeriod $period)
+    public static function accFilterAccPeriodBalanceByDays(AcRecAcc $acc,
+                                                           AcRecAcc $accFilter,
+                                                           AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
-        $command = $connection->createCommand('
+        $command    = $connection->createCommand('
             SELECT
               accounting_date `date`,
               IFNULL(SUM(
@@ -267,13 +290,13 @@ class AcTran extends BaseAcTran
                 accounting_date
             ORDER BY
                 accounting_date
-          ', [
-              ':acc_id' => $acc->id,
-              ':acc_filter_id' => $accFilter->id,
-              ':period_id' => $period->id,
-              ]);
+          ',
+            [
+            ':acc_id' => $acc->id,
+            ':acc_filter_id' => $accFilter->id,
+            ':period_id' => $period->id,
+        ]);
 
         return $command->queryAll();
     }
-
 }
