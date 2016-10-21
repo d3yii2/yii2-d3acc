@@ -63,6 +63,8 @@ class PeriodBase
             throw new \Exception('Can not create balance: '.json_encode($r));
         }
 
+
+
         if(!$lastPeriod->next_period){
             $date = new \DateTime($lastPeriod->to);
             $date->modify('+1 day');
@@ -78,6 +80,8 @@ class PeriodBase
                 throw new \Exception('Can not add next period: '.json_encode($period->getErrors()));
             }
             $lastPeriod->next_period = $period->id;
+        }else{
+            $period = AcPeriod::findOne($lastPeriod->next_period);
         }
 
         $lastPeriod->status = AcPeriod::STATUS_CLOSED;

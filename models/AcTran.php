@@ -118,9 +118,10 @@ class AcTran extends BaseAcTran
      * get account balance for period
      * @param \d3acc\models\AcRecAcc $acc
      * @param \d3acc\models\AcPeriod $period
+     * @param boolean $addPrevPalance
      * @return decimal
      */
-    public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period)
+    public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period, $addPrevPalance = true)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -146,7 +147,11 @@ class AcTran extends BaseAcTran
 
         $actualBalance = $command->queryScalar();
 
-        return AcPeriodBalance::accPeriodBalance($acc, $period) + $command->queryScalar();
+        if($addPrevPalance){
+            $actualBalance += AcPeriodBalance::accPeriodBalance($acc, $period);
+        }
+
+        return $actualBalance;
     }
 
     public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period)
