@@ -93,4 +93,13 @@ class AcPeriod extends BaseAcPeriod
         
         return parent::delete();
     }
+
+    /**
+     * 
+     * @return boolean
+     */
+    public function isActive()
+    {
+        return $this->status == self::STATUS_ACTIVE;
+    }
 }
