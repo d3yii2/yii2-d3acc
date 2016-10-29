@@ -76,6 +76,7 @@ class AcTran extends BaseAcTran
                 SELECT
                   rec_acc_id,
                   ra.label,
+                  ra.account_id,
                   SUM(amount) amount
 
                 FROM
@@ -104,6 +105,53 @@ class AcTran extends BaseAcTran
                   INNER JOIN ac_rec_acc ra
                     ON a.rec_acc_id = ra.id
                 GROUP BY rec_acc_id
+                order by ra.label
+          ',
+            [
+            ':period_id' => $period->id,
+            ':prev_period_id' => $period->prev_period,
+        ]);
+
+        return $command->queryAll();
+    }
+
+    /**
+     * get account balance for period
+     * @param \d3acc\models\AcPeriod $period
+     * @return decimal
+     */
+    public static function periodBalanceTotal(AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command    = $connection->createCommand('
+                SELECT
+                  rec_acc_id,
+                  account.name label,
+                  ra.account_id,
+                  SUM(amount) amount
+
+                FROM
+                  (SELECT
+                    debit_rec_acc_id rec_acc_id,
+                    - IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY debit_rec_acc_id
+                  UNION
+                  SELECT
+                    credit_rec_acc_id rec_acc_id,
+                    IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY credit_rec_acc_id
+                    ) a
+                  INNER JOIN ac_rec_acc ra
+                    ON a.rec_acc_id = ra.id
+                  INNER JOIN ac_account account
+                    ON ra.account_id = account.id
+                GROUP BY ra.account_id
                 order by ra.label
           ',
             [
@@ -152,6 +200,46 @@ class AcTran extends BaseAcTran
         }
 
         return $actualBalance;
+    }
+
+    /**
+     * get account balance for period grouped by CODE
+     * @param int $accountId
+     * @param \d3acc\models\AcPeriod $period
+     * @return array
+     */
+    public static function accPeriodBalanceGroupedByCode($accountId, AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command    = $connection->createCommand('
+            SELECT
+              IFNULL(SUM(
+                CASE
+                  racc.id 
+                  WHEN t.debit_rec_acc_id
+                  THEN - t.amount
+                  ELSE t.amount
+                END
+              ),0) amount,
+              code label,
+              0 account_id
+            FROM
+              ac_tran t
+            INNER JOIN ac_rec_acc racc
+              ON (t.debit_rec_acc_id = racc.id OR t.credit_rec_acc_id = racc.id)
+                AND racc.account_id = :account_id
+            WHERE
+                t.period_id = :period_id
+            GROUP BY t.code
+          ',
+            [
+            ':account_id' => $accountId,
+            ':period_id' => $period->id,
+        ]);
+
+        return $command->queryAll();
+
+
     }
 
     public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period)
