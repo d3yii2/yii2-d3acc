@@ -514,7 +514,7 @@ class AcTran extends BaseAcTran
     public static function accBalanceFilter($accountId,AcPeriod $period, $filter)
     {
 
-        $innerJoin = $where =  $broupBy = [];
+        $join = $where =  $broupBy = [];
         foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
 
             if(!isset($filter[$acDef->table])){

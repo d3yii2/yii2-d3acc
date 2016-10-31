@@ -13,26 +13,7 @@ use Exception;
 class AcAccount extends BaseAcAccount
 {
 
-public function behaviors()
-    {
-        return ArrayHelper::merge(
-            parent::behaviors(),
-            [
-                # custom behaviors
-            ]
-        );
-    }
-
-    public function rules()
-    {
-        return ArrayHelper::merge(
-             parent::rules(),
-             [
-                  # custom validation rules
-             ]
-        );
-    }
-
+    public static $allTableRows = [];
     /**
      *      * 
      * @param int $accId
@@ -65,5 +46,23 @@ public function behaviors()
         }
         
         return $model;
+    }
+
+    /**
+     * @inheritdoc
+     * @return static|null ActiveRecord instance matching the condition, or `null` if nothing matches.
+     */
+    public static function findOne($condition)
+    {
+        if(!is_array($condition)){
+            if(self::$allTableRows){
+                return self::$allTableRows[$condition];
+            }
+            foreach(self::find()->all() as $row){
+                self::$allTableRows[$row->id] = $row;
+            }
+            return self::$allTableRows[$condition];
+        }
+        return parent::findByCondition($condition)->one();
     }
 }
