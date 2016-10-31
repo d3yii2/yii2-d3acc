@@ -91,4 +91,37 @@ class AcRecAcc extends BaseAcRecAcc
 
         return $model;
     }
+
+    /**
+     * search accounts
+     * @param int $accId
+     * @param array $ref
+     * @return array
+     */
+    public static function filterAcc($accId, $ref)
+    {
+        $acc = AcAccount::findOne($accId);
+
+        /**
+         * search account
+         */
+        $findRecRef = self::find()->where(['account_id' => $accId]);
+
+        foreach ($acc->getAcDefs()->all() as $acDef) {
+            if(!isset($ref[$acDef->table])){
+                continue;
+            }
+            $tableAsName = '`r'.$acDef->table.'`';
+            $findRecRef->join('INNER JOIN', '`ac_rec_ref` as '.$tableAsName,
+                '`ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`');
+            $findRecRef->andWhere(
+                [
+                    $tableAsName.'.`def_id`' => $acDef->id,
+                    $tableAsName.'.`pk_value`' => $ref[$acDef->table],
+            ]);
+        }
+
+        return $findRecRef->all();
+    }
+
 }

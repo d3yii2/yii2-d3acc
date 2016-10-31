@@ -121,6 +121,9 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
 
     public function testAcRecAccGetValidatedAccc()
     {
+        /**
+         * get accounts
+         */
         $recAccDebit = AcRecAcc::getAcc($this->acc->id,
                 ['Test01' => 1, 'Test02' => 2]);
         $this->assertEquals($recAccDebit->getAccount()->one()->id, $this->acc->id);
@@ -132,12 +135,18 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $recAccCredit = AcRecAcc::getAcc($this->accD->id, ['Test03' => 22]);
         $this->assertEquals($recAccDebit->id, $recAcc2->id);
 
+        /**
+         * get periods
+         */
         $period = AcPeriod::getActivePeriod(self::PERIOD_TYPE, '2016-09-02');
         $this->assertTrue(!$period);
 
         $period = AcPeriod::getActivePeriod(self::PERIOD_TYPE, '2016-10-02');
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
+        /**
+         * registre transaction
+         */
         $amt = 100;
         $tran = AcTran::registre($recAccDebit, $recAccCredit, $amt, '2016.10.11',
                 self::PERIOD_TYPE);
@@ -149,8 +158,35 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $creditBalance = AcTran::accPeriodBalance($recAccCredit, $period);
         $this->assertEquals($amt,$creditBalance);
 
+        /**
+         * validate filtering
+         */
+        $recAccList = AcRecAcc::filterAcc($this->acc->id,['Test01' => 1]);
+        $this->assertEquals($recAccDebit->id,$recAccList[0]->id);
+
+        $data = AcTran::accFilterAccPeriodBalanceByDays($recAccCredit,$recAccDebit,$period);
+        $this->assertEquals($recAccDebit->id,$data[0]['rec_acc_id']);
+        $data = AcTran::accFilterAccPeriodBalanceByDays($recAccCredit,[$recAccDebit],$period);
+        $this->assertEquals($recAccDebit->id,$data[0]['rec_acc_id']);
+
+        $data = AcTran::accFilterExtPeriodBalanceByDays($recAccList,$period);
+        $this->assertEquals($recAccDebit->id,$data[0]['rec_acc_id']);
+
+        $balance = AcTran::accBalanceFilter($this->acc->id, $period, ['Test01' => 1]);
+        $this->assertEquals(-$amt,$balance);
+
+        $balanceByDays = AcTran::accByDaysFilter($this->acc->id, $period, ['Test01' => 1]);
+        
+        $this->assertEquals(-$amt,$balanceByDays[0]['amount']);
+
+        /**
+         * close period
+         */
         $newPeriod = PeriodMonth::close(self::PERIOD_TYPE);
 
+        /**
+         * check new period balance
+         */
         $debitBalance = AcTran::accPeriodBalance($recAccDebit, $newPeriod);
         $this->assertEquals($amt,-$debitBalance);
 

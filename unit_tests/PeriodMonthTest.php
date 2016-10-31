@@ -23,14 +23,14 @@ class PeriodMonthTest extends \PHPUnit_Framework_TestCase
     public function deletePeriodType($type)
     {
         foreach (AcPeriod::findAll(['period_type' => $type]) as $period) {
-            $period->delete();
-        }
-    }
-
-    public function deletePeriod()
-    {
-
-        foreach (AcPeriod::findAll(['period_type' => self::PERIOD_TYPE]) as $period) {
+            if($nextPeriod = $period->getNextPeriod()->one()){
+                $nextPeriod->prev_period = null;
+                $nextPeriod->save();
+            }
+            if($prevPeriod = $period->getPrevPeriod()->one()){
+                $prevPeriod->next_period = null;
+                $prevPeriod->save();
+            }
             $period->delete();
         }
     }

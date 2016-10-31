@@ -68,20 +68,12 @@ class AcPeriod extends BaseAcPeriod
 
     public function getNext()
     {
-         return self::find()
-            ->where(['period_type' => $this->period_type])
-            ->andWhere("`from` > '" .$this->from."' ")
-            ->orderBy(['from' => SORT_ASC])
-             ->one();
+        return $this->getNextPeriod()->one();
     }
     
     public function getPrev()
     {
-         return self::find()
-            ->where(['period_type' => $this->period_type])
-            ->andWhere("`from` < '" .$this->from."' ")
-            ->orderBy(['from' => SORT_DESC])
-             ->one();
+         return $this->getPrevPeriod()->one();
     }
 
     public function delete()
