@@ -4,6 +4,7 @@
  * 
  * @author Uldis Nelsons
  */
+
 namespace d3acc\models;
 
 use Yii;
@@ -29,7 +30,8 @@ class AcTran extends BaseAcTran
      * @throws \Exception
      */
     public static function registre(
-    AcRecAcc $debitAcc, AcRecAcc $creditAcc, $amt, $date, $periodType, $code = false
+    AcRecAcc $debitAcc, AcRecAcc $creditAcc, $amt, $date, $periodType,
+    $code = false
     )
     {
         if (!$debitAcc) {
@@ -58,8 +60,8 @@ class AcTran extends BaseAcTran
         $model->amount            = $amt;
         $model->t_user_id         = 7;
         $model->t_datetime        = new Expression('NOW()');
-        if($code){
-            $model->code        = $code;
+        if ($code) {
+            $model->code = $code;
         }
         if (!$model->save()) {
             throw new \Exception('Can not create transaction: '.json_encode($model->getErrors()));
@@ -173,7 +175,8 @@ class AcTran extends BaseAcTran
      * @param boolean $addPrevPalance
      * @return decimal
      */
-    public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period, $addPrevPalance = true)
+    public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period,
+                                            $addPrevPalance = true)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -199,7 +202,7 @@ class AcTran extends BaseAcTran
 
         $actualBalance = $command->queryScalar();
 
-        if($addPrevPalance){
+        if ($addPrevPalance) {
             $actualBalance += AcPeriodBalance::accPeriodBalance($acc, $period);
         }
 
@@ -212,7 +215,8 @@ class AcTran extends BaseAcTran
      * @param \d3acc\models\AcPeriod $period
      * @return array
      */
-    public static function accPeriodBalanceGroupedByCode($accountId, AcPeriod $period)
+    public static function accPeriodBalanceGroupedByCode($accountId,
+                                                         AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -242,8 +246,6 @@ class AcTran extends BaseAcTran
         ]);
 
         return $command->queryAll();
-
-
     }
 
     /**
@@ -311,7 +313,8 @@ class AcTran extends BaseAcTran
      * @return decimal
      */
     public static function accPeriodBalanceByDays(AcRecAcc $acc,
-                                                  AcPeriod $period, $addPrevToFirstDay = true)
+                                                  AcPeriod $period,
+                                                  $addPrevToFirstDay = true)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -344,14 +347,15 @@ class AcTran extends BaseAcTran
             ':period_id' => $period->id,
         ]);
 
-        $days       = $command->queryAll();
+        $days = $command->queryAll();
 
-        if($addPrevToFirstDay){
+        if ($addPrevToFirstDay) {
             $periodDays = $period->getDates();
             if (!isset($days[$periodDays[0]])) {
                 $days[$periodDays[0]] = 0;
             }
-            $days[$periodDays[0]] += AcPeriodBalance::accPeriodBalance($acc, $period);
+            $days[$periodDays[0]] += AcPeriodBalance::accPeriodBalance($acc,
+                    $period);
         }
 
         return $days;
@@ -365,16 +369,16 @@ class AcTran extends BaseAcTran
      * @return decimal
      */
     public static function accFilterAccPeriodBalanceByDays(AcRecAcc $acc,
-                                                            $accFilter,
+                                                           $accFilter,
                                                            AcPeriod $period)
     {
-        if(!is_array($accFilter)){
+        if (!is_array($accFilter)) {
             $accFilter = [$accFilter];
         }
         $accFilterIdList = ArrayHelper::getColumn($accFilter, 'id');
-        $accFilterCsv = implode(',',$accFilterIdList);
-        $connection = Yii::$app->getDb();
-        $command    = $connection->createCommand('
+        $accFilterCsv    = implode(',', $accFilterIdList);
+        $connection      = Yii::$app->getDb();
+        $command         = $connection->createCommand('
             SELECT
               accounting_date `date`,
               IFNULL(SUM(
@@ -413,7 +417,6 @@ class AcTran extends BaseAcTran
         return $command->queryAll();
     }
 
-
     /**
      * for account list get total balance by days for period
      * 
@@ -422,10 +425,11 @@ class AcTran extends BaseAcTran
      * @return array
      * @throws \Exception
      */
-    public static function accFilterExtPeriodBalanceByDays($accList,AcPeriod $period)
+    public static function accFilterExtPeriodBalanceByDays($accList,
+                                                           AcPeriod $period)
     {
 
-        if(!$accList){
+        if (!$accList) {
             return [];
         }
 
@@ -433,30 +437,29 @@ class AcTran extends BaseAcTran
          * get common account_id
          */
         $accId = false;
-        foreach($accList as $acc){
+        foreach ($accList as $acc) {
 
-            if($accId && $accId !== $acc->account_id){
+            if ($accId && $accId !== $acc->account_id) {
                 throw new \Exception('In Acc list mixed diferents accounts');
             }
             $accId = $acc->account_id;
         }
-        
-        $innerJoin = $where =  $broupBy = [];
+
+        $innerJoin = $where     = $broupBy   = [];
         foreach (AcAccount::findOne($accId)->getAcDefs()->all() as $acDef) {
             $tableAsName = '`r'.$acDef->table.'`';
 
-            $select[] = ',' . $tableAsName.'.`pk_value` ' . $acDef->table . '_pk_value';
-            $join[] = 'LEFT OUTER JOIN `ac_rec_ref` as ' .$tableAsName .
+            $select[] = ','.$tableAsName.'.`pk_value` '.$acDef->table.'_pk_value';
+            $join[]   = 'LEFT OUTER JOIN `ac_rec_ref` as '.$tableAsName.
                 ' ON `ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`
-                    AND ' . $tableAsName.'.`def_id` = ' . $acDef->id;
+                    AND '.$tableAsName.'.`def_id` = '.$acDef->id;
 
-            $broupBy[] = ',' . $tableAsName.'.`pk_value`';
-
+            $broupBy[] = ','.$tableAsName.'.`pk_value`';
         }
 
         $accIdList = ArrayHelper::getColumn($accList, 'id');
 
-        $accdIdInList = "'" . implode("','",$accIdList) . "'";
+        $accdIdInList = "'".implode("','", $accIdList)."'";
 
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -466,7 +469,7 @@ class AcTran extends BaseAcTran
                 CASE
                   WHEN credit_rec_acc_id in ('.$accdIdInList.')
                   THEN amount
-                  ELSE + amount
+                  ELSE - amount
                 END
               ),0) amount,
               CASE
@@ -474,7 +477,7 @@ class AcTran extends BaseAcTran
                   THEN credit_rec_acc_id
                   ELSE debit_rec_acc_id
                 END rec_acc_id
-              '.implode(PHP_EOL,$select).'
+              '.implode(PHP_EOL, $select).'
             FROM
               ac_tran
               INNER JOIN ac_rec_acc
@@ -483,7 +486,7 @@ class AcTran extends BaseAcTran
                                     THEN credit_rec_acc_id
                                     ELSE debit_rec_acc_id
                                    END
-              '.implode(PHP_EOL,$join).'
+              '.implode(PHP_EOL, $join).'
             WHERE
                 period_id = :period_id
                 AND  (
@@ -493,15 +496,13 @@ class AcTran extends BaseAcTran
                     )
             GROUP BY
                 accounting_date
-                '.implode(PHP_EOL,$broupBy).'
+                '.implode(PHP_EOL, $broupBy).'
             ORDER BY
                 accounting_date
-          ',
-    [':period_id' => $period->id]);
+          ', [':period_id' => $period->id]);
 
         return $command->queryAll();
     }
-
 
     /**
      * Balance account filtered by table values  
@@ -511,24 +512,22 @@ class AcTran extends BaseAcTran
      * @param array $filter
      * @return int
      */
-    public static function accBalanceFilter($accountId,AcPeriod $period, $filter)
+    public static function accBalanceFilter($accountId, AcPeriod $period,
+                                            $filter)
     {
 
-        $join = $where =  $broupBy = [];
+        $join = [];
         foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
 
-            if(!isset($filter[$acDef->table])){
+            if (!isset($filter[$acDef->table])) {
                 continue;
             }
 
             $tableAsName = '`r'.$acDef->table.'`';
-
-            $select[] = ',' . $tableAsName.'.`pk_value` ' . $acDef->table . '_pk_value';
-            $join[] = 'INNER JOIN `ac_rec_ref` as ' .$tableAsName .
+            $join[]      = 'INNER JOIN `ac_rec_ref` as '.$tableAsName.
                 ' ON `ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`
-                    AND ' . $tableAsName.'.`def_id` = ' . $acDef->id
-                    . ' AND ' . $tableAsName.'.`pk_value` = ' . $filter[$acDef->table];
-
+                    AND '.$tableAsName.'.`def_id` = '.$acDef->id
+                .' AND '.$tableAsName.'.`pk_value` = '.$filter[$acDef->table];
         }
 
         $connection = Yii::$app->getDb();
@@ -545,15 +544,14 @@ class AcTran extends BaseAcTran
               ac_tran
               INNER JOIN ac_rec_acc
                 ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
-              '.implode(PHP_EOL,$join).'
+              '.implode(PHP_EOL, $join).'
             WHERE
                 ac_rec_acc.account_id = :account_id
                 AND period_id = :period_id
           ',
-    [
-        ':period_id' => $period->id,
-        ':account_id' => $accountId,
-
+            [
+            ':period_id' => $period->id,
+            ':account_id' => $accountId,
         ]);
 
         return $command->queryScalar();
@@ -567,28 +565,27 @@ class AcTran extends BaseAcTran
      * @param array $filter
      * @return int
      */
-    public static function accByDaysFilter($accountId,AcPeriod $period, $filter)
+    public static function accByDaysFilter($accountId, AcPeriod $period, $filter)
     {
 
-        $innerJoin = $where =  $broupBy = [];
+        $join    = $where   = $broupBy = [];
         foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
-
-            if(!isset($filter[$acDef->table])){
-                continue;
-            }
 
             $tableAsName = '`r'.$acDef->table.'`';
 
-            $select[] = ',' . $tableAsName.'.`pk_value` ' . $acDef->table . '_pk_value';
-            $join[] = 'INNER JOIN `ac_rec_ref` as ' .$tableAsName .
+            $select[] = ','.$tableAsName.'.`pk_value` '.$acDef->table.'_pk_value';
+
+            $joinSql = 'INNER JOIN `ac_rec_ref` as '.$tableAsName.
                 ' ON `ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`
-                    AND ' . $tableAsName.'.`def_id` = ' . $acDef->id
-                    . ' AND ' . $tableAsName.'.`pk_value` = ' . $filter[$acDef->table];
+                    AND '.$tableAsName.'.`def_id` = '.$acDef->id;
 
+            if (isset($filter[$acDef->table])) {
+                $joinSql .= ' AND '.$tableAsName.'.`pk_value` = '.$filter[$acDef->table];
+                ;
+            }
+            $join[] = $joinSql;
         }
-
-        $connection = Yii::$app->getDb();
-        $command    = $connection->createCommand('
+        $sql        = '
             SELECT
               IFNULL(SUM(
                 CASE ac_rec_acc.id
@@ -598,24 +595,26 @@ class AcTran extends BaseAcTran
                 END
               ),0) amount,
               accounting_date `date`
+              '.implode(PHP_EOL, $select).'
             FROM
               ac_tran
               INNER JOIN ac_rec_acc
                 ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
-              '.implode(PHP_EOL,$join).'
+              '.implode(PHP_EOL, $join).'
             WHERE
                 ac_rec_acc.account_id = :account_id
                 AND period_id = :period_id
             GROUP BY
                 accounting_date
-          ',
-    [
-        ':period_id' => $period->id,
-        ':account_id' => $accountId,
+          ';
 
+        $connection = Yii::$app->getDb();
+        $command    = $connection->createCommand($sql,
+            [
+            ':period_id' => $period->id,
+            ':account_id' => $accountId,
         ]);
 
         return $command->queryAll();
-
     }
 }

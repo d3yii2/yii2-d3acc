@@ -10,6 +10,7 @@ use d3acc\models\AcTran;
 use d3acc\models\AcPeriod;
 use d3acc\components\PeriodBase;
 use d3acc\components\PeriodMonth;
+use d3acc\models\AcPeriodBalance;
 
 class AcAccountTest extends \PHPUnit_Framework_TestCase
 {
@@ -71,6 +72,8 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $period->from = '2016-10-01';
         $period->to = '2016-10-31';
         $period->save();
+
+        AcAccount::$allTableRows = [];
 
     }
 
@@ -193,6 +196,11 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $creditBalance = AcTran::accPeriodBalance($recAccCredit, $newPeriod);
         $this->assertEquals($amt,$creditBalance);
 
+        $balance = AcPeriodBalance::accPeriodBalance($recAccDebit,$newPeriod);
+        $this->assertEquals($amt,-$balance);
+
+        $data = AcPeriodBalance::accBalanceFilter($recAccDebit->account_id,$newPeriod, ['Test01' => 1]);
+        $this->assertEquals($amt, -$data[0]['amount']);
 
     }
 }
