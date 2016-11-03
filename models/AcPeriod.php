@@ -21,7 +21,8 @@ class AcPeriod extends BaseAcPeriod
     {
         $query = self::find()
             ->where(['period_type' => $periodType])
-            ->andWhere(['status' => self::STATUS_ACTIVE]);
+            ->andWhere(['status' => self::STATUS_ACTIVE])
+            ->orderBy(['from' => SORT_ASC]);
         if ($date) {
             $query->andWhere(" '".$date."' >= `from` and  '".$date."' <= `to`");
         }
