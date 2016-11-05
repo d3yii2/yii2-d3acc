@@ -351,10 +351,10 @@ class AcTran extends BaseAcTran
 
         if ($addPrevToFirstDay) {
             $periodDays = $period->getDates();
-            if (!isset($days[$periodDays[0]])) {
-                $days[$periodDays[0]] = 0;
+            if(!$days || $days[0]['date'] != $periodDays[0]){
+                array_unshift($days,['date' => $periodDays[0], 'amount' => 0]);
             }
-            $days[$periodDays[0]] += AcPeriodBalance::accPeriodBalance($acc,
+            $days[0]['amount'] += AcPeriodBalance::accPeriodBalance($acc,
                     $period);
         }
 
