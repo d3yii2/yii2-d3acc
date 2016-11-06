@@ -73,10 +73,23 @@ class AcTran extends BaseAcTran
     /**
      * get account balance for period
      * @param \d3acc\models\AcPeriod $period
+     * @param boolean $addPrevPalance
      * @return decimal
      */
-    public static function periodBalance(AcPeriod $period)
+    public static function periodBalance(AcPeriod $period, $addPrevPalance = true)
     {
+        $unionPrevBalanceSql = '';
+        if($addPrevPalance){
+            $unionPrevBalanceSql = '
+                UNION
+                  SELECT
+                    rec_acc_id,
+                    amount
+                  FROM
+                    ac_period_balance
+                  WHERE period_id = :prev_period_id
+                  ';
+        }
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
                 SELECT
@@ -84,7 +97,6 @@ class AcTran extends BaseAcTran
                   ra.label,
                   ra.account_id,
                   SUM(amount) amount
-
                 FROM
                   (SELECT
                     debit_rec_acc_id rec_acc_id,
@@ -101,13 +113,8 @@ class AcTran extends BaseAcTran
                     ac_tran
                   WHERE period_id = :period_id
                   GROUP BY credit_rec_acc_id
-                  UNION
-                  SELECT
-                    rec_acc_id,
-                    amount
-                  FROM
-                    ac_period_balance
-                  WHERE period_id = :prev_period_id) a
+                  '.$unionPrevBalanceSql.'
+                  ) a
                   INNER JOIN ac_rec_acc ra
                     ON a.rec_acc_id = ra.id
                 GROUP BY rec_acc_id
@@ -162,10 +169,10 @@ class AcTran extends BaseAcTran
           ',
             [
             ':period_id' => $period->id,
-            ':prev_period_id' => $period->prev_period,
         ]);
 
-        return $command->queryAll();
+        $data = $command->queryAll();
+        return $data;
     }
 
     /**

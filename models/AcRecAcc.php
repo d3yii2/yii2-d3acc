@@ -124,4 +124,12 @@ class AcRecAcc extends BaseAcRecAcc
         return $findRecRef->all();
     }
 
+    /**
+     * Get ref PK value 
+     * @param int $def_id id from table ac_def
+     * @return int
+     */
+    public function getRefPkValue($def_id){
+        return $this->getAcRecRefs()->select('pk_value')->where(['def_id' => $def_id])->scalar();
+    }
 }
