@@ -135,18 +135,20 @@ class AcTran extends BaseAcTran
      */
     public static function periodBalanceTotal(AcPeriod $period)
     {
+
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
                 SELECT
                   rec_acc_id,
                   account.name label,
                   ra.account_id,
-                  SUM(amount) amount
-
+                  SUM(amount) amount,
+                  SUM(prev_balance) + SUM(amount) total_amount
                 FROM
                   (SELECT
                     debit_rec_acc_id rec_acc_id,
-                    - IFNULL(SUM(amount), 0) amount
+                    - IFNULL(SUM(amount), 0) amount,
+                    0 prev_balance
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
@@ -154,10 +156,25 @@ class AcTran extends BaseAcTran
                   UNION
                   SELECT
                     credit_rec_acc_id rec_acc_id,
-                    IFNULL(SUM(amount), 0) amount
+                    IFNULL(SUM(amount), 0) amount,
+                    0 prev_balance
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                UNION
+                select 
+                    credit_rec_acc_id rec_acc_id,
+                    0 amount,
+                    amount prev_balance
+                from
+                (
+                  SELECT
+                    rec_acc_id credit_rec_acc_id,
+                    amount
+                  FROM
+                    ac_period_balance
+                  WHERE period_id = :prev_period_id
+                ) prevb
                   GROUP BY credit_rec_acc_id
                     ) a
                   INNER JOIN ac_rec_acc ra
@@ -169,6 +186,7 @@ class AcTran extends BaseAcTran
           ',
             [
             ':period_id' => $period->id,
+            ':prev_period_id' => $period->prev_period,
         ]);
 
         $data = $command->queryAll();
