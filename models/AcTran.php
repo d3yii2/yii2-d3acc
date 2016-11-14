@@ -261,7 +261,7 @@ class AcTran extends BaseAcTran
      * @param \d3acc\models\AcPeriod $period
      * @return array [accounting_date,+/-amount, acc_label, code,notes,ref_table, ref_id]
      */
-    public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period)
+    public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period, $startBalance = true)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -300,17 +300,19 @@ class AcTran extends BaseAcTran
         ]);
 
         $tran        = $command->queryAll();
-        $startRecord = [
-            'amount' => AcPeriodBalance::accPeriodBalance($acc, $period),
-            'acc_label' => 'Start amount',
-            'accounting_date' => '',
-            'code' => '',
-            'notes' => '',
-            'ref_table' => '',
-            'ref_id' => '',
-        ];
-        $a           = array_merge([$startRecord], $tran);
-        return $a;
+        if($startBalance){
+            $startRecord = [
+                'amount' => AcPeriodBalance::accPeriodBalance($acc, $period),
+                'acc_label' => 'Start amount',
+                'accounting_date' => '',
+                'code' => '',
+                'notes' => '',
+                'ref_table' => '',
+                'ref_id' => '',
+            ];
+            $tran           = array_merge([$startRecord], $tran);
+        }
+        return $tran;
     }
 
     /**
