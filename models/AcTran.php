@@ -540,8 +540,30 @@ class AcTran extends BaseAcTran
      * @return int
      */
     public static function accBalanceFilter($accountId, AcPeriod $period,
-                                            $filter)
+                                            $filter, $addPrevPalance = false)
     {
+        $selectSql = '   
+            IFNULL(SUM(
+                CASE ac_rec_acc.id
+                  WHEN credit_rec_acc_id
+                  THEN ac_tran.amount
+                  ELSE - ac_tran.amount
+                END
+              ),0) amount
+              ';
+        if($addPrevPalance){
+            $selectSql = '
+                IFNULL(SUM(
+                    CASE ac_rec_acc.id
+                      WHEN credit_rec_acc_id
+                      THEN ac_tran.amount
+                      ELSE - ac_tran.amount
+                    END
+                  ),0)
+                  +
+                  IFNULL(SUM(IFNULL(b.amount,0)),0)
+              ';
+        }
 
         $join = [];
         foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
@@ -560,24 +582,23 @@ class AcTran extends BaseAcTran
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
             SELECT
-              IFNULL(SUM(
-                CASE ac_rec_acc.id
-                  WHEN credit_rec_acc_id
-                  THEN amount
-                  ELSE - amount
-                END
-              ),0) amount
+              ' . $selectSql . '
             FROM
               ac_tran
               INNER JOIN ac_rec_acc
                 ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
               '.implode(PHP_EOL, $join).'
+              LEFT OUTER JOIN ac_period_balance b
+                ON ac_rec_acc.id = b.rec_acc_id
+                  AND b.period_id = :prev_period_id
             WHERE
                 ac_rec_acc.account_id = :account_id
-                AND period_id = :period_id
+                AND ac_tran.period_id = :period_id
+
           ',
             [
             ':period_id' => $period->id,
+            ':prev_period_id' => $period->prev_period,
             ':account_id' => $accountId,
         ]);
 

@@ -67,11 +67,19 @@ class AcPeriod extends BaseAcPeriod
         return $dates;
     }
 
+    /**
+     *
+     * @return AcPeriod
+     */
     public function getNext()
     {
         return $this->getNextPeriod()->one();
     }
     
+    /**
+     * 
+     * @return AcPeriod
+     */
     public function getPrev()
     {
          return $this->getPrevPeriod()->one();
