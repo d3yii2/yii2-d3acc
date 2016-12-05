@@ -539,7 +539,7 @@ class AcTran extends BaseAcTran
      * @param array $filter
      * @return int
      */
-    public static function accBalanceFilter($accountId, AcPeriod $period,
+    public static function accBalanceFilterOld($accountId, AcPeriod $period,
                                             $filter, $addPrevPalance = false)
     {
         $selectSql = '   
@@ -603,6 +603,82 @@ class AcTran extends BaseAcTran
         ]);
 
         return $command->queryScalar();
+    }
+
+    /**
+     * Balance account filtered by table values
+     *
+     * @param int $accountId
+     * @param \d3acc\models\AcPeriod $period
+     * @param array $filter
+     * @return int
+     */
+    public static function accBalanceFilter($accountId, AcPeriod $period,
+                                           $filter, $addPrevPalance = false)
+    {
+        $join = [];
+        foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
+
+            if (!isset($filter[$acDef->table])) {
+                continue;
+            }
+
+            $tableAsName = '`r'.$acDef->table.'`';
+            $join[]      = 'INNER JOIN `ac_rec_ref` as '.$tableAsName.
+                ' ON `ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`
+                    AND '.$tableAsName.'.`def_id` = '.$acDef->id
+                .' AND '.$tableAsName.'.`pk_value` = '.$filter[$acDef->table];
+        }
+
+        $connection = Yii::$app->getDb();
+        $command    = $connection->createCommand('
+            SELECT
+              IFNULL(SUM(
+                CASE ac_rec_acc.id
+                  WHEN credit_rec_acc_id
+                  THEN ac_tran.amount
+                  ELSE - ac_tran.amount
+                END
+              ),0) amount
+            FROM
+              ac_tran
+              INNER JOIN ac_rec_acc
+                ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
+              '.implode(PHP_EOL, $join).'
+            WHERE
+                ac_rec_acc.account_id = :account_id
+                AND ac_tran.period_id = :period_id
+
+          ',
+            [
+            ':period_id' => $period->id,
+            ':account_id' => $accountId,
+        ]);
+
+        $balance =  $command->queryScalar();
+
+        if($addPrevPalance){
+            $command    = $connection->createCommand('
+                SELECT
+                    IFNULL(SUM(IFNULL(b.amount,0)),0)
+                FROM
+                  ac_period_balance b
+                  INNER JOIN ac_rec_acc
+                    ON ac_rec_acc.id = b.rec_acc_id
+                '.implode(PHP_EOL, $join).'
+                WHERE
+                    ac_rec_acc.account_id = :account_id
+                    AND b.period_id = :prev_period_id
+
+              ',
+                [
+                ':prev_period_id' => $period->prev_period,
+                ':account_id' => $accountId,
+            ]);
+
+            $balance +=  $command->queryScalar();
+        }
+        return $balance;
     }
 
     /**
