@@ -58,7 +58,7 @@ class AcTran extends BaseAcTran
         $model->debit_rec_acc_id  = $debitAcc->id;
         $model->credit_rec_acc_id = $creditAcc->id;
         $model->amount            = $amt;
-        $model->t_user_id         = 7;
+        $model->t_user_id         = \Yii::$app->user->identity->id;;
         $model->t_datetime        = new Expression('NOW()');
         if ($code) {
             $model->code = $code;
@@ -134,6 +134,52 @@ class AcTran extends BaseAcTran
      * @return decimal
      */
     public static function periodBalanceTotal(AcPeriod $period)
+    {
+        $connection = Yii::$app->getDb();
+        $command    = $connection->createCommand('
+                SELECT
+                  rec_acc_id,
+                  account.name label,
+                  ra.account_id,
+                  SUM(amount) amount,
+                  0 total_amount
+                FROM
+                  (SELECT
+                    debit_rec_acc_id rec_acc_id,
+                    - IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY debit_rec_acc_id
+                  UNION
+                  SELECT
+                    credit_rec_acc_id rec_acc_id,
+                    IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY credit_rec_acc_id
+                    ) a
+                  INNER JOIN ac_rec_acc ra
+                    ON a.rec_acc_id = ra.id
+                  INNER JOIN ac_account account
+                    ON ra.account_id = account.id
+                GROUP BY ra.account_id
+                order by ra.label
+          ',
+            [
+            ':period_id' => $period->id,
+        ]);
+        $data = $command->queryAll();
+        return $data;
+    }
+
+    /**
+     * get account balance for period
+     * @param \d3acc\models\AcPeriod $period
+     * @return decimal
+     */
+    public static function periodBalanceTotalX(AcPeriod $period)
     {
 
         $connection = Yii::$app->getDb();
