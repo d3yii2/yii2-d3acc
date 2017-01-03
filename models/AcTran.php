@@ -220,6 +220,64 @@ class AcTran extends BaseAcTran
      * @param \d3acc\models\AcPeriod $period
      * @return decimal
      */
+    public static function periodBalanceByCodeTotal(AcPeriod $period, $accountId)
+    {
+        $connection = Yii::$app->getDb();
+
+        $command    = $connection->createCommand('
+                SELECT
+                  rec_acc_id,
+                  account.name label,
+                  ra.account_id,
+                  a.code,
+                  SUM(amount) amount,
+                  0 total_amount
+                FROM
+                  (SELECT
+                    debit_rec_acc_id rec_acc_id,
+                    code,
+                    - IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY
+                    debit_rec_acc_id,
+                    code
+                  UNION
+                  SELECT
+                    credit_rec_acc_id rec_acc_id,
+                    code,
+                    IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  WHERE period_id = :period_id
+                  GROUP BY
+                    credit_rec_acc_id,
+                    code
+                    ) a
+                  INNER JOIN ac_rec_acc ra
+                    ON a.rec_acc_id = ra.id
+                  INNER JOIN ac_account account
+                    ON ra.account_id = account.id
+                WHERE
+                    ra.account_id = :account_id
+                GROUP BY 
+                    ra.account_id,
+                    a.code
+                order by ra.label
+          ',
+            [
+            ':period_id' => $period->id,
+            ':account_id' => $accountId,
+        ]);
+        return  $command->queryAll();
+    }
+
+    /**
+     * get account balance for period
+     * @param \d3acc\models\AcPeriod $period
+     * @return decimal
+     */
     public static function periodBalanceTotal1x(AcPeriod $period)
     {
 
