@@ -422,6 +422,7 @@ class AcTran extends BaseAcTran
      * Get period transactions for account fith start balance
      * @param \d3acc\models\AcRecAcc $acc
      * @param \d3acc\models\AcPeriod $period
+     * @param bool $startBalance
      * @return array [accounting_date,+/-amount, acc_label, code,notes,ref_table, ref_id]
      */
     public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period, $startBalance = true)
