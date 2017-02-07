@@ -31,7 +31,7 @@ class AcTran extends BaseAcTran
      */
     public static function registre(
     AcRecAcc $debitAcc, AcRecAcc $creditAcc, $amt, $date, $periodType,
-    $code = false
+    $code = false, $tranTime =  false
     )
     {
         if (!$debitAcc) {
@@ -49,8 +49,21 @@ class AcTran extends BaseAcTran
         if (!$periodType) {
             throw new \Exception('Undefined period type');
         }
+        if ($amt < 0) {
+            throw new \Exception('Ilegal transaction amount: ' . $amt);
+        }
 
         $period = AcPeriod::getActivePeriod($periodType, $date);
+
+        if (php_sapi_name() == "cli"){
+            $userId = 7;//uldis
+        }else{
+            $userId = \Yii::$app->user->identity->id;
+        }
+
+        if(!$tranTime ){
+            $tranTime = new Expression('NOW()');
+        }
 
         $model                    = new AcTran();
         $model->period_id         = $period->id;
@@ -58,8 +71,8 @@ class AcTran extends BaseAcTran
         $model->debit_rec_acc_id  = $debitAcc->id;
         $model->credit_rec_acc_id = $creditAcc->id;
         $model->amount            = $amt;
-        $model->t_user_id         = \Yii::$app->user->identity->id;;
-        $model->t_datetime        = new Expression('NOW()');
+        $model->t_user_id         = $userId;
+        $model->t_datetime        = $tranTime;
         if ($code) {
             $model->code = $code;
         }
