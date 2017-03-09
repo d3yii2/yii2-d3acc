@@ -1,6 +1,6 @@
 Accounting
 ==========
-Accounting
+Yii2 accounting module, accounts and periods
 
 Installation
 ------------
@@ -21,11 +21,11 @@ or add
 
 to the require section of your `composer.json` file.
 
+push migration
 
 Usage
 -----
 
-Once the extension is installed, simply use it in your code by  :
+Define account plan by creating acc class
 
-```php
-<?= \d3acc\AutoloadExample::widget(); ?>```
+Add definition record in tables
