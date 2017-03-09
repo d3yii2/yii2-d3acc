@@ -1,14 +1,16 @@
 {
     "name": "d3yii2/yii2-d3acc",
-    "description": "Accounting",
-    "keywords": ["accountig"],
-    "license": "MIT",
+    "description": "Yii2 accounting module, accounts and periods",
+    "keywords": ["Yii2","accountig", "accounts", "balance", "periods"],
+    "license": "BSD-4-Clause",
     "authors": [
         {
             "name": "Uldis Nelsons",
             "email": "uldis@weberp.lv"
         }
     ],
+    
+  "homepage": "https://github.com/d3yii2/yii2-d3acc",
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii2": "*"
