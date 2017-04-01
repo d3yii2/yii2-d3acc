@@ -1,3 +1,8 @@
+[![Latest Stable Version](https://poser.pugx.org/d3yii2/yii2-d3acc/v/stable)](https://packagist.org/packages/d3yii2/yii2-d3acc)
+[![Total Downloads](https://poser.pugx.org/d3yii2/yii2-d3acc/downloads)](https://packagist.org/packages/d3yii2/yii2-d3acc)
+[![Latest Unstable Version](https://poser.pugx.org/d3yii2/yii2-d3acc/v/unstable)](https://packagist.org/packages/d3yii2/yii2-d3acc)
+[![License](https://poser.pugx.org/d3yii2/yii2-d3acc/license)](https://packagist.org/packages/d3yii2/yii2-d3acc)
+
 Accounting
 ==========
 Yii2 accounting module, accounts and periods
