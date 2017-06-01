@@ -18,6 +18,7 @@ use yii\db\Expression;
 class AcTran extends BaseAcTran
 {
 
+    public static $period ;
     /**
      * registre transaction
      * @param \d3acc\models\AcRecAcc $debitAcc
@@ -53,7 +54,11 @@ class AcTran extends BaseAcTran
             throw new \Exception('Ilegal transaction amount: ' . $amt);
         }
 
-        $period = AcPeriod::getActivePeriod($periodType, $date);
+        if(!self::$period) {
+            $period = AcPeriod::getActivePeriod($periodType, $date);
+        }else{
+            $period = self::$period;
+        }
 
         if (php_sapi_name() == "cli"){
             $userId = 7;//uldis
