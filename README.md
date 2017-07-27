@@ -32,8 +32,58 @@ to the require section of your `composer.json` file.
 
 push migration
 
-Usage
------
+Account definition
+------------------
+
+Create object acc
+
+```php
+use \d3acc\models\AcRecAcc;
+use Yii;
+/**
+ * Description of acc
+ *
+ * @author Dealer
+ */
+ class acc
+{
+    const PLAYER_ACC        = 4;
+    const EXPENSES          = 10;
+    const FOND_PLAYGROUND   = 7;
+
+    /**
+     * get player  account
+     * @param int $personId
+     * @return AcRecAcc
+     */
+    public static function player($personId)
+    {
+        return AcRecAcc::getAcc(self::PLAYER_ACC, ['d3p_person' => $personId]);
+    }
+
+    /**
+     * get expenses  account
+     * @return AcRecAcc
+     */
+    public static function expenses()
+    {
+        return AcRecAcc::getAcc(self::EXPENSES);
+    }
+    
+    /**
+     * get for player playground account
+     * @param int $personId
+     * @param int $playgroundId
+     * @return AcRecAcc
+     */
+    public static function fondPlayground($personId, $playgroundId)
+    {
+        return AcRecAcc::getAcc(self::FOND_PLAYGROUND,
+                ['d3p_person' => $personId, 'pk_playground' => $playgroundId]);
+    }    
+}
+ 
+```
 
 Define account plan by creating acc class
 
