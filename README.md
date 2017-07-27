@@ -47,6 +47,8 @@ use Yii;
  */
  class acc
 {
+    const MONTH_PERIOD = 1;
+
     const PLAYER_ACC        = 4;
     const EXPENSES          = 10;
     const FOND_PLAYGROUND   = 7;
@@ -60,7 +62,7 @@ use Yii;
      */
     public static function player($personId)
     {
-        return AcRecAcc::getAcc(self::PLAYER_ACC, ['d3p_person' => $personId]);
+        return AcRecAcc::getAcc(self::PLAYER_ACC, ['person' => $personId]);
     }
 
     /**
@@ -81,13 +83,13 @@ use Yii;
     public static function fondPlayground($personId, $playgroundId)
     {
         return AcRecAcc::getAcc(self::FOND_PLAYGROUND,
-                ['d3p_person' => $personId, 'pk_playground' => $playgroundId]);
+                ['person' => $personId, 'playground' => $playgroundId]);
     }    
 }
  
 ```
 
-Transaction registratin
+Transaction registration
 ------------------------
 
 ```php
@@ -100,6 +102,47 @@ Transaction registratin
        $day = date('Y-m-d');
        $tran = AcTran::registre($recAccPlayer, $recAccPPG, $personAmt,
                $day, acc::MONTH_PERIOD, acc::CODE_CRD_PLAYGROUND);
+
+
+```
+
+Periods
+-------
+
+```php
+use d3acc\models\AcPeriod;
+$acPeriod = AcPeriod::getActivePeriod(acc::MONTH_PERIOD))
+
+//close period
+\d3acc\components\PeriodMonth::close(acc::MONTH_PERIOD);
+
+
+```
+
+
+Transactions
+------------
+
+```php
+ $recAccPlayer = acc::player($person_id);
+ $data = AcTran::accPeriodTran($recAccPlayer, $acPeriod);
+
+```
+
+
+Balanc
+------
+
+
+
+```php
+ $filter  = ['playground' => $playgroundId]
+ $playgroundAllPersonBalance = AcTran::accBalanceFilter(acc::FOND_PLAYGROUND, $acPeriod,$filter);
+ 
+ $filter  = ['person' => $personId]
+ $personAllPlaygroundsBalance = AcTran::accBalanceFilter(acc::FOND_PLAYGROUND, $acPeriod,$filter);
+ 
+ $allPlaygroundsAllPersonBalance = AcTran::accBalanceFilter(acc::FOND_PLAYGROUND, $acPeriod,[]);
 
 
 ```
