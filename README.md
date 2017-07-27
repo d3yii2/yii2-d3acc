@@ -50,6 +50,8 @@ use Yii;
     const PLAYER_ACC        = 4;
     const EXPENSES          = 10;
     const FOND_PLAYGROUND   = 7;
+    
+    acc::CODE_CRD_PLAYGROUND = 'CreditPlaygound';
 
     /**
      * get player  account
@@ -83,6 +85,23 @@ use Yii;
     }    
 }
  
+```
+
+Transaction registratin
+------------------------
+
+```php
+
+       /**
+        * player accounts
+        */
+       $recAccPPG    = acc::playerPlayground($person_id, $playground_id);
+       $recAccPlayer = acc::player($person_id);
+       $day = date('Y-m-d');
+       $tran = AcTran::registre($recAccPlayer, $recAccPPG, $personAmt,
+               $day, acc::MONTH_PERIOD, acc::CODE_CRD_PLAYGROUND);
+
+
 ```
 
 Define account plan by creating acc class
