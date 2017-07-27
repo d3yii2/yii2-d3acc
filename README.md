@@ -6,7 +6,10 @@
 
 Accounting
 ==========
-Yii2 accounting module, accounts and periods
+This Yii2 module provides support for balance accounting (bookkeeping) system based on debit and credit principles.
+Provide additinal functionality:
+* periods (closing period and period balance)
+* dynamicly creating accounts attached one or more tables
 
 Installation
 ------------
