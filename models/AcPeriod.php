@@ -14,20 +14,23 @@ class AcPeriod extends BaseAcPeriod
     /**
      * find active period
      * @param int $periodType
-     * @param string $date date format yyy-mm-dd
-     * @return \d3acc\models\base\AcPeriod
+     * @param string|bool $date date format yyy-mm-dd
+     * @return \d3acc\models\AcPeriod
      */
     public static function getActivePeriod($periodType, $date = false)
     {
         $query = self::find()
             ->where(['period_type' => $periodType])
-            ->andWhere(['status' => self::STATUS_ACTIVE])
             ->orderBy(['from' => SORT_ASC]);
+
         if ($date) {
             $query->andWhere(" '".$date."' >= `from` and  '".$date."' <= `to`");
+        }else{
+            $query->andWhere(['status' => self::STATUS_ACTIVE]);
         }
 
         return $query->one();
+
     }
 
 //    public function closePeriod($nextPeriodTo){
