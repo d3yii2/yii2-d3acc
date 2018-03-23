@@ -9,21 +9,23 @@ use d3acc\models\AcRecRef;
 
 class AccConstructor
 {
+    /** @var AcAccount */
+    private $account;
+    
     /**
      * @param string $code
      * @param string $name
-     * @return created d3acc\models\AcAccount model
      */
     public function create(string $code, string $name)
     {
-        $model = new AcAccount();
-        $model->code = $code;
-        $model->name = $name;
+        $this->account = new AcAccount();
+        $this->account->code = $code;
+        $this->account->name = $name;
 
-        if (!$model->save()) {
+        if (!$this->account->save()) {
             throw new \Exception('Can not create AcAccount: '.json_encode($model->getErrors()));
         }
-        return $model;
+
     }
 
     /**
@@ -32,19 +34,18 @@ class AccConstructor
      */
     public function load(int $accountId)
     {
-        return AcAccount::findOne($accountId);
+        $this->account = AcAccount::findOne($accountId);
     }
 
     /**
-     * @param int $accountId
      * @param string $table
      * @param string $pkField
      * @return created d3acc\models\AcDef model
      */
-    public function addDimension(int $accountId, string $table, string $pkField)
+    public function addDimension(string $table, string $pkField)
     {
         $model = new AcDef();
-        $model->account_id = $accountId;
+        $model->account_id = $$this->account->id;
         $model->table = $table;
         $model->pk_field = $pkField;
 
@@ -92,21 +93,19 @@ class AccConstructor
     }
 
     /**
-     * @param $accountId
      * @throws Exception
      */
-    public function recalculateLabel($accountId)
+    public function recalculateLabel()
     {
         /**Get data which is static in all function*/
-        $acc_model = $this->load($accId);
-        $acc_defs_model = AcDef::findAll(['account_id' => $acc_model->id]);
+        $acc_defs_model = AcDef::findAll(['account_id' => $this->account->id]);
         $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
 
         /**Single transaction for all records*/
         $db = \Yii::$app->db;
         $transaction = $db->beginTransaction();
 
-        foreach (AcRecAcc::findAll(['account_id' => $acc_model->id])  as $ac_rec_acc){
+        foreach (AcRecAcc::findAll(['account_id' => $this->account->id])  as $ac_rec_acc){
 
             /**Get array of ac_rec_def, where def_id are keys*/
             $acc_rec_ref_array = AcRecRef::find([
