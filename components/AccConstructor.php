@@ -2,6 +2,8 @@
 /**
  *
  */
+namespace d3acc\components;
+
 use d3acc\models\AcAccount;
 use d3acc\models\AcDef;
 use d3acc\models\AcRecAcc;
@@ -30,7 +32,6 @@ class AccConstructor
 
     /**
      * @param int $accountId
-     * @return d3acc\models\AcAccount model
      */
     public function load(int $accountId)
     {
@@ -40,12 +41,12 @@ class AccConstructor
     /**
      * @param string $table
      * @param string $pkField
-     * @return created d3acc\models\AcDef model
+     * @return d3acc\models\AcDef created model
      */
-    public function addDimension(string $table, string $pkField)
+    public function addDimension(string $table, string $pkField = 'id')
     {
         $model = new AcDef();
-        $model->account_id = $$this->account->id;
+        $model->account_id = $this->account->id;
         $model->table = $table;
         $model->pk_field = $pkField;
 
@@ -56,18 +57,17 @@ class AccConstructor
     }
 
     /**
-     * @param int $recAccountId
      * @param int $defId
      * @param int $pkValue
+     * @throws Exception
      */
-    public function addDimensionRecAcc(int $recAccountId, int $defId, int $pkValue)
+    public function addDimensionRecAcc(int $defId, int $pkValue, array $validation = null)
     {
-        $acc_model = $this->load($recAccountId);
         if(!AcDef::findOne(['id' => $defId])){
             throw new \Exception('Can not find ac_def with id:'.$defId);
         }
 
-        foreach ($acc_model->getAcRecAccs()->all() as $ac_rec_acc){
+        foreach ($this->account->getAcRecAccs()->all() as $ac_rec_acc){
             /**Check if already exists ac_rec_ref*/
             $ac_rec_ref_model = AcRecRef::findOne([
                 'rec_account_id' => $ac_rec_acc->id,
@@ -76,6 +76,15 @@ class AccConstructor
 
             /**If not exists then create record*/
             if(!$ac_rec_ref_model){
+
+                /**Add custom validation logic*/
+                if(isset($validation)){
+                    /**If not valid the do nothing*/
+                    if(!$this->validateDimensionSet($ac_rec_acc->id, $validation)){
+                        continue;
+                    }
+                }
+
                 $ac_rec_ref_model = new AcRecRef();
                 $ac_rec_ref_model->rec_account_id = $ac_rec_acc->id;
                 $ac_rec_ref_model->def_id = $defId;
@@ -90,6 +99,30 @@ class AccConstructor
                 continue;
             }
         }
+    }
+
+    /**
+     * @param int $recAccId
+     * @param int $defId
+     * @param int $pkValue
+     * @param array $validation 0 key maps function, rest is custom params
+     * @return bool
+     */
+    public function validateDimensionSet(int $recAccId, array $validation){
+        if($validation['function'] === 1){
+            /**Check if there is AcRecRef for specific AcDef and PkValue*/
+            $ac_rec_ref_model = AcRecRef::findOne([
+                'rec_account_id' => $recAccId,
+                'def_id' => $validation['def_id'],
+                'pk_value' => $validation['pk_value']
+            ]);
+            /**Return true if record is found*/
+            if($ac_rec_ref_model){
+                return true;
+            }
+        }
+        /**Default return false for safety*/
+        return false;
     }
 
     /**
@@ -113,17 +146,17 @@ class AccConstructor
             ])->indexBy('def_id')->all();
 
             /**Recalculate label for ac_rec_acc*/
-            $label = [$acc->name];
+            $label = [$this->account->name];
             foreach ($acc_defs_model as $acDef){
                 $pkValue = $acc_rec_ref_array[$acDef->id]->pk_value;
 
                 if(!isset($tableModels[$acDef->table])){
-                    $label[] = $tableName . '=' . $pkValue;
+                    $label[] = $acDef->table . '=' . $pkValue;
                     continue;
                 }
                 $tm = $tableModels[$acDef->table];
                 if(!method_exists($tm,'itemLabel')){
-                    $label[] = $tableName . '=' . $pkValue;
+                    $label[] = $acDef->table . '=' . $pkValue;
                     continue;
                 }
                 $label[] = $tm::findOne($pkValue)->itemLabel();
