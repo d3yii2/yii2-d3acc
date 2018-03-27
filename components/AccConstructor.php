@@ -4,10 +4,12 @@
  */
 namespace d3acc\components;
 
+use Yii;
 use d3acc\models\AcAccount;
 use d3acc\models\AcDef;
 use d3acc\models\AcRecAcc;
 use d3acc\models\AcRecRef;
+use yii\helpers\ArrayHelper;
 
 class AccConstructor
 {
@@ -61,114 +63,63 @@ class AccConstructor
      * @param int $pkValue
      * @throws Exception
      */
-    public function addDimensionRecAcc(int $defId, int $pkValue, array $validation = null)
+    public function addDimensionRecAcc(int $recAcountId, int $defId, int $pkValue)
     {
-        if(!AcDef::findOne(['id' => $defId])){
-            throw new \Exception('Can not find ac_def with id:'.$defId);
-        }
+        /**Check if already exists ac_rec_ref*/
+        $dimensionRecAcc = AcRecRef::findOne(['rec_account_id' => $recAcountId,'def_id' => $defId]);
 
-        foreach ($this->account->getAcRecAccs()->all() as $ac_rec_acc){
-            /**Check if already exists ac_rec_ref*/
-            $ac_rec_ref_model = AcRecRef::findOne([
-                'rec_account_id' => $ac_rec_acc->id,
-                'def_id' => $defId
-            ]);
+        /**If not exists then create record*/
+        if(!$dimensionRecAcc){
+            $dimensionRecAcc = new AcRecRef();
+            $dimensionRecAcc->rec_account_id = $recAcountId;
+            $dimensionRecAcc->def_id = $defId;
+            $dimensionRecAcc->pk_value = $pkValue;
 
-            /**If not exists then create record*/
-            if(!$ac_rec_ref_model){
-
-                /**Add custom validation logic*/
-                if(isset($validation)){
-                    /**If not valid the do nothing*/
-                    if(!$this->validateDimensionSet($ac_rec_acc->id, $validation)){
-                        continue;
-                    }
-                }
-
-                $ac_rec_ref_model = new AcRecRef();
-                $ac_rec_ref_model->rec_account_id = $ac_rec_acc->id;
-                $ac_rec_ref_model->def_id = $defId;
-                $ac_rec_ref_model->pk_value = $pkValue;
-                ;
-                if (!$ac_rec_ref_model->save()) {
-                    throw new \Exception('Can not create ac_rec_ref: '.json_encode($ac_rec_ref_model->getErrors()));
-                }
+            if (!$dimensionRecAcc->save()) {
+                throw new \Exception('Can not create ac_rec_ref: '.json_encode($ac_rec_ref_model->getErrors()));
             }
             else{
-                /**For now do nothing*/
-                continue;
+                self::recalculateLabel($recAcountId);
             }
         }
-    }
-
-    /**
-     * @param int $recAccId
-     * @param int $defId
-     * @param int $pkValue
-     * @param array $validation 0 key maps function, rest is custom params
-     * @return bool
-     */
-    public function validateDimensionSet(int $recAccId, array $validation){
-        if($validation['function'] === 1){
-            /**Check if there is AcRecRef for specific AcDef and PkValue*/
-            $ac_rec_ref_model = AcRecRef::findOne([
-                'rec_account_id' => $recAccId,
-                'def_id' => $validation['def_id'],
-                'pk_value' => $validation['pk_value']
-            ]);
-            /**Return true if record is found*/
-            if($ac_rec_ref_model){
-                return true;
-            }
-        }
-        /**Default return false for safety*/
-        return false;
     }
 
     /**
      * @throws Exception
      */
-    public function recalculateLabel()
+    private function recalculateLabel(int $recAccId)
     {
-        /**Get data which is static in all function*/
-        $acc_defs_model = AcDef::findAll(['account_id' => $this->account->id]);
+        $ac_def_models = AcDef::findAll(['account_id' => $this->account->id]);
         $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
 
-        /**Single transaction for all records*/
-        $db = \Yii::$app->db;
-        $transaction = $db->beginTransaction();
+        $sql = 'SELECT def_id, pk_value FROM `ac_rec_ref` WHERE `rec_account_id`='.$recAccId;
+        $connection = Yii::$app->getDb();
+        $command    = $connection->createCommand($sql);
+        $rows = $command->queryAll();
+        $acRecRefList = ArrayHelper::map($rows, 'def_id', 'pk_value');
 
-        foreach (AcRecAcc::findAll(['account_id' => $this->account->id])  as $ac_rec_acc){
+        /**Recalculate label for ac_rec_acc*/
+        $label = [$this->account->name];
+        foreach ($ac_def_models as $acDef){
+            $pkValue = $acRecRefList[$acDef->id];
 
-            /**Get array of ac_rec_def, where def_id are keys*/
-            $acc_rec_ref_array = AcRecRef::find([
-                'rec_account_id' => $ac_rec_acc->id
-            ])->indexBy('def_id')->all();
-
-            /**Recalculate label for ac_rec_acc*/
-            $label = [$this->account->name];
-            foreach ($acc_defs_model as $acDef){
-                $pkValue = $acc_rec_ref_array[$acDef->id]->pk_value;
-
-                if(!isset($tableModels[$acDef->table])){
-                    $label[] = $acDef->table . '=' . $pkValue;
-                    continue;
-                }
-                $tm = $tableModels[$acDef->table];
-                if(!method_exists($tm,'itemLabel')){
-                    $label[] = $acDef->table . '=' . $pkValue;
-                    continue;
-                }
-                $label[] = $tm::findOne($pkValue)->itemLabel();
+            if(!isset($tableModels[$acDef->table])){
+                $label[] = $acDef->table . '=' . $pkValue;
+                continue;
             }
-
-            $ac_rec_acc->label = implode(', ', $label);
-            if(!$ac_rec_acc->update()){
-                $transaction->rolback();
-                throw new \Exception('Error: ' .json_encode($model->getErrors()));
+            $tm = $tableModels[$acDef->table];
+            if(!method_exists($tm,'itemLabel')){
+                $label[] = $acDef->table . '=' . $pkValue;
+                continue;
             }
+            $label[] = $tm::findOne($pkValue)->itemLabel();
         }
 
-        $transaction->commit();
+        $acRecAcc = AcRecAcc::findOne($recAccId);
+        $acRecAcc->label = implode(', ', $label);
+        if(!$acRecAcc->update()){
+            throw new \Exception('Error: ' .json_encode($model->getErrors()));
+        }
+
     }
 }
