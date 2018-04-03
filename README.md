@@ -130,7 +130,7 @@ Transactions
 ```
 
 
-Balanc
+Balance
 ------
 
 
@@ -150,3 +150,27 @@ Balanc
 Define account plan by creating acc class
 
 Add definition record in tables
+
+
+Migrations with AccConstructor
+------
+```php
+$constructor = new AccConstructor();
+```
+Load existind or create new account (ac_account table) for session
+```php
+$constructor->load($accId);
+$constructor->create($code, $name);
+```
+Add new account dimension (ac_def table) for loaded/created account
+```php
+$definition = $constructor->addDimension($table, $pkField);
+```
+Add new extended-account (ac_rec_acc table) for loaded/created account
+```php
+$extAccount = $constructor->addExtendedAccount();
+```
+Add new dimension value (ac_rec_ref table) and recalculate label for given extended-account (ac_rec_acc table)
+```php
+$constructor->addDimensionRecAcc($extAccount->id, $definition->id, $pk_value);
+```

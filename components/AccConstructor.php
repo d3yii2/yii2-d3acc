@@ -59,6 +59,20 @@ class AccConstructor
     }
 
     /**
+     * @return AcRecAcc
+     * @throws \Exception
+     */
+    public function addExtendedAccount(){
+        $extendedAccount = new AcRecAcc();
+        $extendedAccount->account_id = $this->account->id;
+        $extendedAccount->label = $this->account->name;
+        if (!$extendedAccount->save()) {
+            throw new \Exception('Can not create ac_rec_ref: '.json_encode($extendedAccount->getErrors()));
+        }
+        return $extendedAccount;
+    }
+
+    /**
      * @param int $defId
      * @param int $pkValue
      * @throws Exception
