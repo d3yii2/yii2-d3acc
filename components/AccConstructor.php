@@ -59,6 +59,27 @@ class AccConstructor
     }
 
     /**
+     * @param string $oldTable
+     * @param string $newTable
+     */
+    public function changeDimensionName(string $oldTable, string $newTable)
+    {
+        $def = AcDef::findOne(['account_id' => $this->account->id,'table' => $oldTable]);
+
+        if($def){
+            $def->table = $newTable;
+            if (!$def->update()) {
+                throw new \Exception('Can not update AcDef: '.json_encode($def->getErrors()));
+            }
+        }
+
+        $accountRecAccList = AcRecAcc::findAll(['account_id' => $this->account->id]);
+        foreach ($accountRecAccList as $recAcc){
+            self::recalculateLabel($recAcc->id);
+        }
+    }
+
+    /**
      * @return AcRecAcc
      * @throws \Exception
      */
@@ -132,7 +153,11 @@ class AccConstructor
         $acRecAcc = AcRecAcc::findOne($recAccId);
         $acRecAcc->label = implode(', ', $label);
         if(!$acRecAcc->update()){
-            throw new \Exception('Error: ' .json_encode($model->getErrors()));
+            $error = $acRecAcc->getErrors();
+            if(count($error)>0){
+                throw new \Exception('Error: ' .json_encode($error));
+            }
+
         }
 
     }
