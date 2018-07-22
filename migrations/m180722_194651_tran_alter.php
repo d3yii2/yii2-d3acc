@@ -17,6 +17,10 @@ class m180722_194651_tran_alter extends Migration
             ALTER TABLE `ac_tran` DROP INDEX `period_id`, ADD INDEX `period_id` (`period_id`, `debit_rec_acc_id`); 
         ');
 
+        $this->execute('
+            ALTER TABLE `ac_rec_ref` DROP INDEX `def_id`, ADD INDEX `def_id` (`def_id`, `pk_value`);  
+        ');
+
     }
 
     /**
