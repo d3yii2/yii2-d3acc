@@ -9,7 +9,6 @@
 namespace d3acc\components;
 
 use d3acc\models\AcTranDim;
-use function igorw\retry;
 use Yii;
 use d3acc\models\AcTran;
 use d3acc\models\AcRecAcc;
