@@ -8,6 +8,8 @@
 
 namespace d3acc\components;
 
+use d3acc\models\AcTranDim;
+use function igorw\retry;
 use Yii;
 use d3acc\models\AcTran;
 use d3acc\models\AcRecAcc;
@@ -56,6 +58,11 @@ class Transaction
      */
     public $tranTime;
 
+    /**
+     * @var  \d3acc\models\AcTran $model
+     */
+    public $model;
+
     public function __construct()
     {
         $this->code = false;
@@ -64,7 +71,7 @@ class Transaction
 
     public function registre()
     {
-        return AcTran::registre(
+        $this->model = AcTran::registre(
             $this->debitAcc,
             $this->creditAcc,
             $this->amount,
@@ -73,6 +80,15 @@ class Transaction
             $this->code,
             $this->tranTime
         );
+        return $this->model;
+    }
+
+    /**
+     * @param integer $dimId
+     * @param decimal $amt
+     */
+    public function registerDim($dimId, $amt){
+        return AcTranDim::register($this->model, $dimId, $amt);
     }
 
 }
