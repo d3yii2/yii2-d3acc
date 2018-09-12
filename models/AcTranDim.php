@@ -11,17 +11,6 @@ use yii\helpers\ArrayHelper;
  */
 class AcTranDim extends BaseAcTranDim
 {
-    /**
-     * @param \d3acc\models\AcTran $transaction
-     * @param integer $dimId
-     * @param deciaml $amt
-     */
-    public static function register($transaction, $dimId, $amt){
-        //ToDo
-        //Must check, perhaps check before this call
-        //Ac_tran.amt = sum(ac_tran_dim.amt) group by tran_id, group_id
-    }
-
     public function behaviors()
     {
         return ArrayHelper::merge(
