@@ -20,7 +20,15 @@ class Dim{
      */
     public $acc_tran;
 
+    /**
+     * @var AcTranDim $acc_tran_dims[];
+     */
     public $acc_tran_dims;
+
+    /**
+     * @var AcDim $acc_dims[];
+     */
+    public $acc_dims;
 
     /**
      * Dim constructor.
@@ -28,7 +36,8 @@ class Dim{
      */
     public function __construct($accTran){
         $this->acc_tran = $accTran;
-        $this->acc_tran_dims = array();
+        $this->acc_tran_dims = [];
+        $this->acc_dims = AcDim::find()->all();
     }
 
     /**
@@ -66,7 +75,16 @@ class Dim{
         /** @var AcTranDim $tran_dim */
         foreach ($this->acc_tran_dims as $tran_dim)
         {
-            $accDim = AcDim::findOne($tran_dim->dim_id);
+            $accDim = null;
+            /** @var AcDim $dim */
+            foreach ($this->acc_dims as $dim){
+                if($dim->id == $tran_dim->dim_id)
+                {
+                    $accDim = $dim;
+                    break;
+                }
+            }
+
             if($dimGroup != 0 && $dimGroup != $accDim->group_id){
                 throw new \Exception('Different dimmension group!');
             }
