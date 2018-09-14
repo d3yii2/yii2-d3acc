@@ -17,16 +17,19 @@ class Dim{
 
     /**
      * @var  AcTran  $acc_tran
+     * Transaction for virtual dimensions
      */
     public $acc_tran;
 
     /**
      * @var AcTranDim $acc_tran_dims[];
+     * Array of transaction dimension amounts
      */
     public $acc_tran_dims;
 
     /**
      * @var AcDim $acc_dims[];
+     *  All available virtual dimensions
      */
     public $acc_dims;
 
@@ -37,7 +40,23 @@ class Dim{
     public function __construct($accTran){
         $this->acc_tran = $accTran;
         $this->acc_tran_dims = [];
-        $this->acc_dims = AcDim::find()->all();
+    }
+
+    /**
+     * @param $integer acDimId
+     * @return AcDim
+     * @throws \Exception
+     */
+    private function getAccDim($acDimId){
+        if(empty($this->acc_dims)){
+            foreach(AcDim::find()->all() as $acDim) {
+                $this->acc_dims[$acDim->id] = $acDim;
+            }
+            if(empty($this->acc_dims)) {
+                throw new \Exception('No virtual dimmensions found!');
+            }
+        }
+        return $this->acc_dims[$acDimId];
     }
 
     /**
@@ -75,26 +94,19 @@ class Dim{
         /** @var AcTranDim $tran_dim */
         foreach ($this->acc_tran_dims as $tran_dim)
         {
-            $accDim = null;
-            /** @var AcDim $dim */
-            foreach ($this->acc_dims as $dim){
-                if($dim->id == $tran_dim->dim_id)
-                {
-                    $accDim = $dim;
-                    break;
-                }
-            }
-
+            /**First check if all transaction dimensions has same dimension group*/
+            $accDim = $this->getAccDim($tran_dim->dim_id);
             if($dimGroup != 0 && $dimGroup != $accDim->group_id){
                 throw new \Exception('Different dimmension group!');
             }
             else{
                 $dimGroup = $accDim->group_id;
             }
+
             $dimAmt = $dimAmt + $tran_dim->amt;
         }
         if($this->acc_tran->amount != $dimAmt){
-            throw new \Exception('Dimmension sum not equal to transaction amaount!');
+            throw new \Exception('Dimmension sum not equal to transaction amount!');
         }
 
         /** @var AcTranDim $tran_dim */

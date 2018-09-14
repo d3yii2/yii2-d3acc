@@ -27,7 +27,7 @@ class AccConstructor
         $this->account->name = $name;
 
         if (!$this->account->save()) {
-            throw new \Exception('Can not create AcAccount: '.json_encode($model->getErrors()));
+            throw new \Exception('Can not create AcAccount: '.json_encode($this->account->getErrors()));
         }
 
     }
