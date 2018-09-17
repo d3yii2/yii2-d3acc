@@ -13,7 +13,7 @@ use yii\db\Exception;
  * @property integer $id
  * @property integer $dim_id
  * @property integer $tran_id
- * @property string $amt
+ * @property float $amt
  * @property string $notes
  *
  * @property \d3acc\models\AcDim $dim
