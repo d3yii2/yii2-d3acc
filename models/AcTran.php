@@ -845,13 +845,15 @@ class AcTran extends BaseAcTran
         return $balance;
     }
 
+
     /**
      * Balance account filtered by table values
      *
-     * @param int $accountId
-     * @param \d3acc\models\AcPeriod $period
-     * @param array $filter
-     * @return int
+     * @param $accountId
+     * @param AcPeriod $period
+     * @param $filter
+     * @return array
+     * @throws \yii\db\Exception
      */
     public static function accByDaysFilter($accountId, AcPeriod $period, $filter)
     {
