@@ -4,6 +4,7 @@ namespace d3acc\components;
 
 use d3acc\models\AcPeriod;
 use \d3acc\models\AcPeriodBalance;
+use d3acc\models\AcPeriodBalanceDim;
 
 class PeriodBase
 {
@@ -35,7 +36,7 @@ class PeriodBase
     }
 
     /**
-     * add next period and calculate balance for closed period
+     * add next period and calculate balance and dim balance for closed period
      *
      * @param int $periodType
      * @return AcPeriod
@@ -61,6 +62,11 @@ class PeriodBase
         if(!$r = AcPeriodBalance::savePeriodBalance($lastPeriod)){
             $transaction->rollback();
             throw new \Exception('Can not create balance: '.json_encode($r));
+        }
+
+        if(!$r = AcPeriodBalanceDim::saveDimPeriodBalance($lastPeriod)){
+            $transaction->rollback();
+            throw new \Exception('Can not create dim balance: '.json_encode($r));
         }
 
 
