@@ -14,7 +14,9 @@ use yii\db\Exception;
  * @property integer $period_id
  * @property integer $dim_id
  * @property string $amount
+ * @property integer $account_id
  *
+ * @property \d3acc\models\AcAccount $account
  * @property \d3acc\models\AcDim $dim
  * @property \d3acc\models\AcPeriod $period
  * @property string $aliasModel
@@ -39,9 +41,10 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['period_id', 'dim_id', 'amount'], 'required'],
-            [['period_id', 'dim_id'], 'integer'],
+            [['period_id', 'dim_id', 'amount', 'account_id'], 'required'],
+            [['period_id', 'dim_id', 'account_id'], 'integer'],
             [['amount'], 'number'],
+            [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::className(), 'targetAttribute' => ['account_id' => 'id']],
             [['dim_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDim::className(), 'targetAttribute' => ['dim_id' => 'id']],
             [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['period_id' => 'id']]
         ];
@@ -57,6 +60,7 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
             'period_id' => Yii::t('d3acc', 'Period'),
             'dim_id' => Yii::t('d3acc', 'Dimension'),
             'amount' => Yii::t('d3acc', 'Amount'),
+            'account_id' => Yii::t('d3acc', 'Account'),
         ];
     }
 
@@ -69,7 +73,16 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
             'period_id' => Yii::t('d3acc', 'Period'),
             'dim_id' => Yii::t('d3acc', 'Dimension'),
             'amount' => Yii::t('d3acc', 'Amount'),
+            'account_id' => Yii::t('d3acc', 'Account'),
         ]);
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAccount()
+    {
+        return $this->hasOne(\d3acc\models\AcAccount::className(), ['id' => 'account_id']);
     }
 
     /**
@@ -86,15 +99,5 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     public function getPeriod()
     {
         return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'period_id']);
-    }
-
-
-
-
-    public function saveOrException($runValidation = true, $attributeNames = null)
-    {
-        if(!parent::save($runValidation, $attributeNames)){
-            throw new Exception(json_encode($this->getErrors()));
-        }
     }
 }
