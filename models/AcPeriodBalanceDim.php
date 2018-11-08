@@ -20,28 +20,50 @@ class AcPeriodBalanceDim extends BaseAcPeriodBalanceDim
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
-            INSERT INTO ac_period_balance_dim (period_id,dim_id,amount)
-            SELECT :period_id AS period_id, tmp.dim_id, SUM(tmp.amount) AS amount
+            INSERT INTO ac_period_balance_dim (period_id,dim_id,amount, account_id)
+            SELECT :period_id AS period_id, tmp.dim_id, SUM(tmp.amount) AS amount, accountId AS account_id
             FROM(
-                SELECT 
-                  acd.id AS dim_id,
-                  IFNULL(SUM(actd.amt), 0) amount
-                FROM
-                  ac_dim AS acd
-                  INNER JOIN ac_tran_dim AS actd
-                    ON actd.dim_id = acd.id
-                  INNER JOIN ac_tran AS act
-                    ON act.id = actd.tran_id AND act.period_id = :period_id
-                  GROUP BY acd.id
-                UNION
-                SELECT
-                  dim_id AS dim_id,
-                  amount
-                FROM
-                  ac_period_balance_dim
-                WHERE period_id = :prev_period_id
+            SELECT 
+		          account.Id AS accountId,
+                  a.dim_id,
+                  SUM(a.amount) AS amount
+            FROM
+              (
+                  SELECT 
+                        debit_rec_acc_id rec_acc_id,
+                        td.dim_id,
+                        - IFNULL(SUM(td.amt), 0) amount
+                  FROM
+                      ac_tran t
+                  INNER JOIN ac_tran_dim td ON t.id=td.tran_id
+                  WHERE period_id = :period_id
+                  GROUP BY debit_rec_acc_id
+                  UNION
+                  SELECT
+                        credit_rec_acc_id rec_acc_id,
+                        td.dim_id,
+                        IFNULL(SUM(td.amt), 0) amount
+                  FROM
+                      ac_tran t
+                  INNER JOIN ac_tran_dim td ON t.id=td.tran_id
+                  WHERE period_id = :period_id
+                  GROUP BY credit_rec_acc_id              
+              ) a
+              INNER JOIN ac_rec_acc ra
+                ON a.rec_acc_id = ra.id
+              INNER JOIN ac_account account 
+                ON ra.account_id = account.id
+              GROUP BY dim_id, accountId
+                
+              UNION
+              SELECT
+                account_id AS accountId,
+                dim_id AS dim_id,
+                amount
+              FROM ac_period_balance_dim
+              WHERE period_id = :prev_period_id
             ) tmp
-            GROUP BY tmp.dim_id
+            GROUP BY tmp.dim_id, tmp.accountId
             ',
             [
                 ':period_id' => $period->id,
