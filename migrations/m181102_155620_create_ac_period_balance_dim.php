@@ -12,6 +12,11 @@ class m181102_155620_create_ac_period_balance_dim extends Migration
      */
     public function safeUp()
     {
+
+        $sql = '
+            DROP TABLE IF EXISTS`ac_period_balance_dim`;
+        ';
+        $this->execute($sql);
         $sql = "
             CREATE TABLE `ac_period_balance_dim`(  
               `id` INT(10) UNSIGNED NOT NULL AUTO_INCREMENT,
