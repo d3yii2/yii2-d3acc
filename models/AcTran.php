@@ -448,6 +448,7 @@ class AcTran extends BaseAcTran
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
             SELECT
+              ac_tran.id tran_id,
               accounting_date,
               CASE
                 ac_tran.debit_rec_acc_id

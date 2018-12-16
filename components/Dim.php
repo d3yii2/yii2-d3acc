@@ -98,7 +98,7 @@ class Dim{
             if(count($this->acc_tran_dims) > 1) {
                 $accDim = $this->getAccDim($tran_dim->dim_id);
                 if ($dimGroup && $dimGroup !== $accDim->group_id) {
-                    throw new \Exception('Different dimmension group!');
+                    throw new \Exception('Different dimension group!');
                 }
                 $dimGroup = $accDim->group_id;
             }
@@ -108,8 +108,8 @@ class Dim{
         /**
          * total must be equal transaction amount
          */
-        if((float)$this->acc_tran->amount !== $dimAmt){
-            throw new \Exception('Dimmension sum not equal to transaction amount!');
+        if((float)$this->acc_tran->amount !== (float)$dimAmt){
+            throw new \Exception('Dimension sum not equal to transaction amount!');
         }
 
 
