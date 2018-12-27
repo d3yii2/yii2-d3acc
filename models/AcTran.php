@@ -146,12 +146,15 @@ class AcTran extends BaseAcTran
         return $command->queryAll();
     }
 
+
     /**
      * get account balance for period
-     * @param \d3acc\models\AcPeriod $period
-     * @return decimal
+     *
+     * @param AcPeriod $period
+     * @return array
+     * @throws \yii\db\Exception
      */
-    public static function periodBalanceTotal(AcPeriod $period)
+    public static function periodBalanceTotal(AcPeriod $period): array
     {
         $connection = Yii::$app->getDb();
 
@@ -233,12 +236,131 @@ class AcTran extends BaseAcTran
         return $tranData;
     }
 
+
+    /**
+     * get account balance wirh dim for period
+     *
+     * @param AcPeriod $period
+     * @param int[] $accList
+     * @param int $accDimGroupId
+     * @return array
+     * @throws \yii\db\Exception
+     */
+    public static function periodBalanceDimTotal(AcPeriod $period, array $accList,int $accDimGroupId): array
+    {
+        $connection = Yii::$app->getDb();
+
+        $command    = $connection->createCommand('
+                SELECT
+                  rec_acc_id,
+                  concat(account.name , \' \',IFNULL(acd.name,\'\')) label,
+                  concat(ra.account_id,\'-\',IFNULL(a.dim_id,0)) account_id,
+                  SUM(amount) amount,
+                  0 total_amount
+                FROM
+                  (SELECT
+                    debit_rec_acc_id rec_acc_id,
+                    td.dim_id,
+                    - IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                  LEFT OUTER JOIN ac_tran_dim td 
+                    ON ac_tran.id = td.tran_id                         
+                  WHERE 
+                    period_id = :period_id
+                  GROUP BY 
+                    debit_rec_acc_id,
+                    td.dim_id
+                  UNION
+                  SELECT
+                    credit_rec_acc_id rec_acc_id,
+                    td.dim_id,
+                    IFNULL(SUM(amount), 0) amount
+                  FROM
+                    ac_tran
+                    LEFT OUTER JOIN ac_tran_dim td 
+                        ON ac_tran.id = td.tran_id                       
+                  WHERE 
+                    period_id = :period_id
+                  GROUP BY 
+                    credit_rec_acc_id,
+                    td.dim_id
+                    ) a
+                  INNER JOIN ac_rec_acc ra
+                    ON a.rec_acc_id = ra.id
+                  INNER JOIN ac_account account
+                    ON ra.account_id = account.id
+                  LEFT OUTER JOIN ac_dim AS acd 
+                    ON acd.id = a.dim_id 
+                  LEFT OUTER JOIN ac_dim_group AS acdg 
+                    ON acd.group_id = acdg.id 
+                    AND acdg.id = :ac_dim_group_id                    
+                WHERE 
+                  ra.account_id in ('.implode(',',$accList).') 
+                GROUP BY 
+                  ra.account_id,
+                  a.dim_id
+                ORDER BY 
+                  ra.label
+          ',[
+            ':period_id' => $period->id,
+            ':ac_dim_group_id' => $accDimGroupId,
+        ]);
+        $tranData = $command->queryAll();
+        $tranData = ArrayHelper::index($tranData, 'account_id');
+//
+//        $command    = $connection->createCommand('
+//            SELECT
+//              rec_acc_id,
+//              account.name label,
+//              ra.account_id,
+//              SUM(amount) amount
+//            FROM
+//              ac_period_balance b
+//              INNER JOIN ac_rec_acc ra
+//                ON b.rec_acc_id = ra.id
+//              INNER JOIN ac_account account
+//                ON ra.account_id = account.id
+//            WHERE
+//                b.period_id = :prev_period_id
+//                AND ra.account_id in ('.implode(',',$accList).')
+//            GROUP BY ra.account_id
+//            ORDER BY ra.label
+//          ',
+//            [
+//            ':prev_period_id' => $period->prev_period,
+//        ]);
+//        $balanceData = $command->queryAll();
+//        $balanceData = ArrayHelper::index($balanceData, 'account_id');
+//
+//        foreach($tranData as $accId => $dRow){
+//            $prevBalance = 0;
+//            if(isset($balanceData[$accId])){
+//                $prevBalance = $balanceData[$accId]['amount'];
+//            }
+//            $tranData[$accId]['total_amount'] = $dRow['amount']
+//                + $prevBalance;
+//        }
+//        foreach($balanceData as $accId => $bRow){
+//            if(!isset($tranData[$accId])){
+//                $tranData[$accId] = $bRow;
+//                $tranData[$accId]['total_amount'] = $bRow['amount'];
+//                $tranData[$accId]['amount'] = 0;
+//            }
+//        }
+        //dump($tranData);die();
+        return $tranData;
+    }
+
     /**
      * get account balance for period
-     * @param \d3acc\models\AcPeriod $period
-     * @return decimal
+     *
+     * @param AcPeriod $period
+     * @param int $accountId
+     * @return array
+     * @throws \yii\db\Exception
      */
-    public static function periodBalanceByCodeTotal(AcPeriod $period, $accountId)
+    public static function periodBalanceByCodeTotal(AcPeriod $period,int $accountId): array
     {
         $connection = Yii::$app->getDb();
 
