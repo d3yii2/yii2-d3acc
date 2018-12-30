@@ -23,9 +23,11 @@ class AcTran extends BaseAcTran
      * registre transaction
      * @param \d3acc\models\AcRecAcc $debitAcc
      * @param \d3acc\models\AcRecAcc $creditAcc
-     * @param decimal $amt
-     * @param date $date
+     * @param float $amt
+     * @param string $date date format yyyy-mm-dd
      * @param int $periodType
+     * @param string|bool $code
+     * @param string|Expression|bool $tranTime
      * @return \d3acc\models\AcTran
      * @return string $code transaction code
      * @throws \Exception
@@ -60,7 +62,7 @@ class AcTran extends BaseAcTran
             $period = self::$period;
         }
 
-        if (php_sapi_name() == "cli"){
+        if (PHP_SAPI === "cli"){
             $userId = 7;//uldis
         }else{
             $userId = \Yii::$app->user->identity->id;
@@ -70,7 +72,7 @@ class AcTran extends BaseAcTran
             $tranTime = new Expression('NOW()');
         }
 
-        $model                    = new AcTran();
+        $model                    = new self();
         $model->period_id         = $period->id;
         $model->accounting_date   = $date;
         $model->debit_rec_acc_id  = $debitAcc->id;
@@ -90,14 +92,16 @@ class AcTran extends BaseAcTran
 
     /**
      * get account balance for period
-     * @param \d3acc\models\AcPeriod $period
-     * @param boolean $addPrevPalance
-     * @return decimal
+     *
+     * @param AcPeriod $period
+     * @param bool $addPrevBalance
+     * @return array
+     * @throws \yii\db\Exception
      */
-    public static function periodBalance(AcPeriod $period, $addPrevPalance = true)
+    public static function periodBalance(AcPeriod $period, $addPrevBalance = true)
     {
         $unionPrevBalanceSql = '';
-        if($addPrevPalance){
+        if($addPrevBalance){
             $unionPrevBalanceSql = '
                 UNION
                   SELECT
@@ -413,10 +417,13 @@ class AcTran extends BaseAcTran
         return  $command->queryAll();
     }
 
+
     /**
      * get account balance for period
-     * @param \d3acc\models\AcPeriod $period
-     * @return decimal
+     *
+     * @param AcPeriod $period
+     * @return array
+     * @throws \yii\db\Exception
      */
     public static function periodBalanceTotal1x(AcPeriod $period)
     {
@@ -474,19 +481,21 @@ class AcTran extends BaseAcTran
             ':prev_period_id' => $period->prev_period,
         ]);
 
-        $data = $command->queryAll();
-        return $data;
+        return $command->queryAll();
     }
+
 
     /**
      * get account balance for period
-     * @param \d3acc\models\AcRecAcc $acc
-     * @param \d3acc\models\AcPeriod $period
-     * @param boolean $addPrevPalance
-     * @return decimal
+     *
+     * @param AcRecAcc $acc
+     * @param AcPeriod $period
+     * @param bool $addPrevBalance
+     * @return false|int|string|null
+     * @throws \yii\db\Exception
      */
     public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period,
-                                            $addPrevPalance = true)
+                                            $addPrevBalance = true)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -512,21 +521,23 @@ class AcTran extends BaseAcTran
 
         $actualBalance = $command->queryScalar();
 
-        if ($addPrevPalance) {
+        if ($addPrevBalance) {
             $actualBalance += AcPeriodBalance::accPeriodBalance($acc, $period);
         }
 
         return $actualBalance;
     }
 
+
     /**
      * get account balance for period grouped by CODE
-     * @param int $accountId
-     * @param \d3acc\models\AcPeriod $period
+     *
+     * @param $accountId
+     * @param AcPeriod $period
      * @return array
+     * @throws \yii\db\Exception
      */
-    public static function accPeriodBalanceGroupedByCode($accountId,
-                                                         AcPeriod $period)
+    public static function accPeriodBalanceGroupedByCode($accountId, AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
@@ -560,10 +571,12 @@ class AcTran extends BaseAcTran
 
     /**
      * Get period transactions for account fith start balance
-     * @param \d3acc\models\AcRecAcc $acc
-     * @param \d3acc\models\AcPeriod $period
+     *
+     * @param AcRecAcc $acc
+     * @param AcPeriod $period
      * @param bool $startBalance
      * @return array [accounting_date,+/-amount, acc_label, code,notes,ref_table, ref_id]
+     * @throws \yii\db\Exception
      */
     public static function accPeriodTran(AcRecAcc $acc, AcPeriod $period, $startBalance = true)
     {
@@ -620,15 +633,17 @@ class AcTran extends BaseAcTran
         return $tran;
     }
 
+
     /**
      * get account balance for period grouped by days
-     * @param \d3acc\models\AcRecAcc $acc
-     * @param \d3acc\models\AcPeriod $period
-     * @return decimal
+     *
+     * @param AcRecAcc $acc
+     * @param AcPeriod $period
+     * @param bool $addPrevToFirstDay
+     * @return array
+     * @throws \yii\db\Exception
      */
-    public static function accPeriodBalanceByDays(AcRecAcc $acc,
-                                                  AcPeriod $period,
-                                                  $addPrevToFirstDay = true)
+    public static function accPeriodBalanceByDays(AcRecAcc $acc, AcPeriod $period, $addPrevToFirstDay = true)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
