@@ -417,6 +417,79 @@ class AcTran extends BaseAcTran
         return  $command->queryAll();
     }
 
+    /**
+     * get account balance for period
+     *
+     * @param AcPeriod $period
+     * @param int $accountId
+     * @return array
+     * @throws \yii\db\Exception
+     */
+    public static function periodBalanceWithDimByCodeTotal(AcPeriod $period,int $accountId): array
+    {
+        $connection = Yii::$app->getDb();
+
+        $command    = $connection->createCommand('
+                SELECT
+                  rec_acc_id,
+                  account.name label,
+                  ra.account_id,
+                  a.code,
+                  ac_dim.name dimName,
+                  SUM(amount) amount,
+                  0 total_amount
+                FROM
+                  (SELECT
+                    debit_rec_acc_id rec_acc_id,
+                    code,
+                    dim.dim_id,
+                    - IFNULL(SUM(IFNULL(dim.amt,amount)), 0) amount
+                  FROM
+                    ac_tran
+                    LEFT OUTER JOIN ac_tran_dim dim
+                      ON ac_tran.id = dim.tran_id
+                  WHERE period_id = :period_id
+                  GROUP BY
+                    debit_rec_acc_id,
+                    dim.dim_id,
+                    code
+                  UNION
+                  SELECT
+                    credit_rec_acc_id rec_acc_id,
+                    code,
+                    dim.dim_id,
+                    IFNULL(SUM(IFNULL(dim.amt,amount)), 0) amount
+                  FROM
+                    ac_tran
+                    LEFT OUTER JOIN ac_tran_dim dim
+                      ON ac_tran.id = dim.tran_id                    
+                  WHERE period_id = :period_id
+                  GROUP BY
+                    credit_rec_acc_id,
+                    dim.dim_id,
+                    code
+                    ) a
+                  INNER JOIN ac_rec_acc ra
+                    ON a.rec_acc_id = ra.id
+                  INNER JOIN ac_account account
+                    ON ra.account_id = account.id
+                  LEFT OUTER JOIN ac_dim 
+                    ON a.dim_id = ac_dim.id  
+                WHERE
+                    ra.account_id = :account_id
+                GROUP BY 
+                    ra.account_id,
+                    a.code,
+                    a.dim_id
+                order by ra.label
+          ',
+            [
+            ':period_id' => $period->id,
+            ':account_id' => $accountId,
+        ]);
+        return  $command->queryAll();
+    }
+
 
     /**
      * get account balance for period
