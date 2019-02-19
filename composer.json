@@ -6,11 +6,11 @@
     "authors": [
         {
             "name": "Uldis Nelsons",
-            "email": "uldis@weberp.lv"
+            "email": "uldis@weberp.lv",
+            "homepage": "http://www.weberp.lv/"
         }
     ],
-    
-  "homepage": "https://github.com/d3yii2/yii2-d3acc",
+
     "require": {
         "php": ">=5.4.0",
         "yiisoft/yii2": "*"
