@@ -32,6 +32,11 @@ to the require section of your `composer.json` file.
 
 push migration
 
+DB structure
+------------
+
+[DB Schema]: https://github.com/d3yii2/yii2-d3acc/tree/master/doc/DbSchema.png "Db Schema"
+
 Account definition
 ------------------
 
