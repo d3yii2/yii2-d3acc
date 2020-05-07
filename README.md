@@ -35,8 +35,9 @@ push migration
 DB structure
 ------------
 
-[DB Schema]: ?raw=true "Db Schema"
 [DB Schema](https://github.com/d3yii2/yii2-d3acc/blob/master/doc/DbSchema.png "DB Schema")
+
+[DB Schema]: https://github.com/d3yii2/yii2-d3acc/blob/master/doc/DbSchema.png 
 
 Account definition
 ------------------
