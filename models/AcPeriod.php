@@ -2,9 +2,9 @@
 
 namespace d3acc\models;
 
-use Yii;
+use DateTime;
+use Exception;
 use \d3acc\models\base\AcPeriod as BaseAcPeriod;
-use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "ac_period".
@@ -15,9 +15,9 @@ class AcPeriod extends BaseAcPeriod
      * find active period
      * @param int $periodType
      * @param string|bool $date date format yyy-mm-dd
-     * @return \d3acc\models\AcPeriod
+     * @return AcPeriod
      */
-    public static function getActivePeriod($periodType, $date = false)
+    public static function getActivePeriod($periodType, $date = false): AcPeriod
     {
         $query = self::find()
             ->where(['period_type' => $periodType])
@@ -28,8 +28,9 @@ class AcPeriod extends BaseAcPeriod
         }else{
             $query->andWhere(['status' => self::STATUS_ACTIVE]);
         }
-
-        return $query->one();
+        /** @var AcPeriod $period */
+        $period = $query->one();
+        return $period;
 
     }
 
@@ -57,12 +58,14 @@ class AcPeriod extends BaseAcPeriod
 
     /**
      * Get list of period dates
-     * @return array 
+     * @return array
+     * @throws Exception
      */
-    public function getDates(){
+    public function getDates(): array
+    {
         $dates = [$this->from];
-        $date = new \DateTime($this->from);
-        while($date->format('Y-m-d') != $this->to){
+        $date = new DateTime($this->from);
+        while($date->format('Y-m-d') !== $this->to){
             $date->modify('+1 day');
             $dates[] = $date->format('Y-m-d');
         }
@@ -102,8 +105,8 @@ class AcPeriod extends BaseAcPeriod
      * 
      * @return boolean
      */
-    public function isActive()
+    public function isActive(): bool
     {
-        return $this->status == self::STATUS_ACTIVE;
+        return $this->status === self::STATUS_ACTIVE;
     }
 }
