@@ -5,12 +5,13 @@
 namespace d3acc\models\base;
 
 use Yii;
-use yii\db\Exception;
+
 
 /**
  * This is the base-model class for table "ac_dim_group".
  *
  * @property integer $id
+ * @property integer $sys_company_id
  * @property string $name
  *
  * @property \d3acc\models\AcDim[] $acDims
@@ -24,7 +25,7 @@ abstract class AcDimGroup extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'ac_dim_group';
     }
@@ -36,7 +37,8 @@ abstract class AcDimGroup extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['name'], 'required'],
+            'required' => [['name'], 'required'],
+            'smallint Unsigned' => [['id','sys_company_id'],'integer' ,'min' => 0 ,'max' => 65535],
             [['name'], 'string', 'max' => 50]
         ];
     }
@@ -48,6 +50,7 @@ abstract class AcDimGroup extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
+            'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
             'name' => Yii::t('d3acc', 'Name'),
         ];
     }
@@ -55,7 +58,7 @@ abstract class AcDimGroup extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeHints()
+    public function attributeHints(): array
     {
         return array_merge(parent::attributeHints(), [
             'name' => Yii::t('d3acc', 'Name'),
@@ -70,25 +73,4 @@ abstract class AcDimGroup extends \yii\db\ActiveRecord
         return $this->hasMany(\d3acc\models\AcDim::className(), ['group_id' => 'id']);
     }
 
-
-    /**
-     * @return \d3acc\models\AcDim     */
-    public function newAcDims()
-    {
-        if ($this->getIsNewRecord()){
-            throw new Exception('Can not create new related record for new record!');
-        }
-        $model = new \d3acc\models\AcDim();
-        $model->group_id = $this->id;
-        return $model;
-    }
-
-
-
-    public function saveOrException($runValidation = true, $attributeNames = null)
-    {
-        if(!parent::save($runValidation, $attributeNames)){
-            throw new Exception(json_encode($this->getErrors()));
-        }
-    }
 }

@@ -2,9 +2,8 @@
 
 namespace d3acc\models;
 
-use Yii;
+use d3acc\dictionaries\AcAccountDictionary;
 use d3acc\models\base\AcAccount as BaseAcAccount;
-use yii\helpers\ArrayHelper;
 use Exception;
 
 /**
@@ -64,5 +63,17 @@ class AcAccount extends BaseAcAccount
             return self::$allTableRows[$condition];
         }
         return parent::findByCondition($condition)->one();
+    }
+
+    public function afterSave($insert, $changedAttributes)
+    {
+        parent::afterSave($insert, $changedAttributes);
+        AcAccountDictionary::clearCache();
+    }
+
+    public function afterDelete()
+    {
+        parent::afterDelete();
+        AcAccountDictionary::clearCache();
     }
 }

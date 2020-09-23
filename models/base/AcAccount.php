@@ -6,14 +6,17 @@ namespace d3acc\models\base;
 
 use Yii;
 
+
 /**
  * This is the base-model class for table "ac_account".
  *
  * @property integer $id
+ * @property integer $sys_company_id
  * @property string $code
  * @property string $name
  *
  * @property \d3acc\models\AcDef[] $acDefs
+ * @property \d3acc\models\AcPeriodBalanceDim[] $acPeriodBalanceDims
  * @property \d3acc\models\AcRecAcc[] $acRecAccs
  * @property string $aliasModel
  */
@@ -25,7 +28,7 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'ac_account';
     }
@@ -37,7 +40,8 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['code', 'name'], 'required'],
+            'required' => [['code', 'name'], 'required'],
+            'smallint Unsigned' => [['id','sys_company_id'],'integer' ,'min' => 0 ,'max' => 65535],
             [['code'], 'string', 'max' => 10],
             [['name'], 'string', 'max' => 50]
         ];
@@ -50,6 +54,7 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
+            'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
             'code' => Yii::t('d3acc', 'Code'),
             'name' => Yii::t('d3acc', 'Name'),
         ];
@@ -58,7 +63,7 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeHints()
+    public function attributeHints(): array
     {
         return array_merge(parent::attributeHints(), [
             'code' => Yii::t('d3acc', 'Code'),
@@ -72,6 +77,14 @@ abstract class AcAccount extends \yii\db\ActiveRecord
     public function getAcDefs()
     {
         return $this->hasMany(\d3acc\models\AcDef::className(), ['account_id' => 'id'])->inverseOf('account');
+    }
+
+    /**
+     * @return \yii\db\ActiveQuery
+     */
+    public function getAcPeriodBalanceDims()
+    {
+        return $this->hasMany(\d3acc\models\AcPeriodBalanceDim::className(), ['account_id' => 'id'])->inverseOf('account');
     }
 
     /**

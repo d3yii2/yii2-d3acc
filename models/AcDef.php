@@ -2,9 +2,9 @@
 
 namespace d3acc\models;
 
-use Yii;
+use d3acc\dictionaries\AcDefDictionary;
 use \d3acc\models\base\AcDef as BaseAcDef;
-use yii\helpers\ArrayHelper;
+
 
 /**
  * This is the model class for table "ac_def".
@@ -12,24 +12,17 @@ use yii\helpers\ArrayHelper;
 class AcDef extends BaseAcDef
 {
 
-public function behaviors()
+    public function afterSave($insert, $changedAttributes)
     {
-        return ArrayHelper::merge(
-            parent::behaviors(),
-            [
-                # custom behaviors
-            ]
-        );
+        parent::afterSave($insert, $changedAttributes);
+        AcDefDictionary::clearCache();
     }
 
-    public function rules()
+    public function afterDelete()
     {
-        return ArrayHelper::merge(
-             parent::rules(),
-             [
-                  # custom validation rules
-             ]
-        );
+        parent::afterDelete();
+        AcDefDictionary::clearCache();
     }
-    
+
+
 }

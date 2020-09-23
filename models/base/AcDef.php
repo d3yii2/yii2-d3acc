@@ -6,16 +6,19 @@ namespace d3acc\models\base;
 
 use Yii;
 
+
 /**
  * This is the base-model class for table "ac_def".
  *
  * @property integer $id
+ * @property integer $sys_company_id
+ * @property string $code
  * @property integer $account_id
  * @property string $table
  * @property string $pk_field
  *
- * @property \d3acc\models\AcAccount $account
  * @property \d3acc\models\AcRecRef[] $acRecRefs
+ * @property \d3acc\models\AcAccount $account
  * @property string $aliasModel
  */
 abstract class AcDef extends \yii\db\ActiveRecord
@@ -26,11 +29,10 @@ abstract class AcDef extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'ac_def';
     }
-
 
     /**
      * @inheritdoc
@@ -38,8 +40,9 @@ abstract class AcDef extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['account_id'], 'required'],
-            [['account_id'], 'integer'],
+            'required' => [['account_id'], 'required'],
+            'smallint Unsigned' => [['id','sys_company_id','account_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            [['code'], 'string', 'max' => 10],
             [['table', 'pk_field'], 'string', 'max' => 100],
             [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::className(), 'targetAttribute' => ['account_id' => 'id']]
         ];
@@ -52,6 +55,8 @@ abstract class AcDef extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
+            'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
+            'code' => Yii::t('d3acc', 'Code'),
             'account_id' => Yii::t('d3acc', 'Account'),
             'table' => Yii::t('d3acc', 'Table'),
             'pk_field' => Yii::t('d3acc', 'Primary key field'),
@@ -61,7 +66,7 @@ abstract class AcDef extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeHints()
+    public function attributeHints(): array
     {
         return array_merge(parent::attributeHints(), [
             'account_id' => Yii::t('d3acc', 'Account'),

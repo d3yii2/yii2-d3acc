@@ -7,6 +7,7 @@
 
 namespace d3acc\models;
 
+use Exception;
 use Yii;
 use d3acc\models\base\AcTran as BaseAcTran;
 use yii\helpers\ArrayHelper;
@@ -30,34 +31,40 @@ class AcTran extends BaseAcTran
      * @param string|Expression|bool $tranTime
      * @return \d3acc\models\AcTran
      * @return string $code transaction code
-     * @throws \Exception
+     * @throws Exception
      */
     public static function registre(
-    AcRecAcc $debitAcc, AcRecAcc $creditAcc, $amt, $date, $periodType,
-    $code = false, $tranTime =  false
+        int $sysCompanyId,
+        AcRecAcc $debitAcc,
+        AcRecAcc $creditAcc,
+        $amt,
+        $date,
+        $periodType,
+        $code = false,
+        $tranTime =  false
     )
     {
         if (!$debitAcc) {
-            throw new \Exception('Undefined debit account');
+            throw new Exception('Undefined debit account');
         }
         if (!$creditAcc) {
-            throw new \Exception('Undefined credit account');
+            throw new Exception('Undefined credit account');
         }
         if (!$amt) {
-            throw new \Exception('Undefined amount');
+            throw new Exception('Undefined amount');
         }
         if (!$date) {
-            throw new \Exception('Undefined date');
+            throw new Exception('Undefined date');
         }
         if (!$periodType) {
-            throw new \Exception('Undefined period type');
+            throw new Exception('Undefined period type');
         }
         if ($amt < 0) {
-            throw new \Exception('Ilegal transaction amount: ' . $amt);
+            throw new Exception('Ilegal transaction amount: ' . $amt);
         }
 
         if(!self::$period) {
-            $period = AcPeriod::getActivePeriod($periodType, $date);
+            $period = AcPeriod::getActivePeriod($sysCompanyId, $periodType, $date);
         }else{
             $period = self::$period;
         }
@@ -73,6 +80,7 @@ class AcTran extends BaseAcTran
         }
 
         $model                    = new self();
+        $model->sys_company_id = $$sysCompanyId;
         $model->period_id         = $period->id;
         $model->accounting_date   = $date;
         $model->debit_rec_acc_id  = $debitAcc->id;
@@ -84,7 +92,7 @@ class AcTran extends BaseAcTran
             $model->code = $code;
         }
         if (!$model->save()) {
-            throw new \Exception('Can not create transaction: '.json_encode($model->getErrors()));
+            throw new Exception('Can not create transaction: '.json_encode($model->getErrors()));
         }
 
         return $model;
@@ -825,7 +833,7 @@ class AcTran extends BaseAcTran
      * @param array $accList array of \d3acc\models\AcRecAcc elements
      * @param \d3acc\models\AcPeriod $period
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public static function accFilterExtPeriodBalanceByDays($accList,
                                                            AcPeriod $period)
@@ -842,7 +850,7 @@ class AcTran extends BaseAcTran
         foreach ($accList as $acc) {
 
             if ($accId && $accId !== $acc->account_id) {
-                throw new \Exception('In Acc list mixed diferents accounts');
+                throw new Exception('In Acc list mixed diferents accounts');
             }
             $accId = $acc->account_id;
         }

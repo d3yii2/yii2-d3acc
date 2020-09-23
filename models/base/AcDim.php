@@ -5,17 +5,19 @@
 namespace d3acc\models\base;
 
 use Yii;
-use yii\db\Exception;
+
 
 /**
  * This is the base-model class for table "ac_dim".
  *
  * @property integer $id
+ * @property integer $sys_company_id
  * @property integer $group_id
  * @property string $name
  *
- * @property \d3acc\models\AcDimGroup $group
+ * @property \d3acc\models\AcPeriodBalanceDim[] $acPeriodBalanceDims
  * @property \d3acc\models\AcTranDim[] $acTranDims
+ * @property \d3acc\models\AcDimGroup $group
  * @property string $aliasModel
  */
 abstract class AcDim extends \yii\db\ActiveRecord
@@ -26,11 +28,10 @@ abstract class AcDim extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'ac_dim';
     }
-
 
     /**
      * @inheritdoc
@@ -38,8 +39,8 @@ abstract class AcDim extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['group_id', 'name'], 'required'],
-            [['group_id'], 'integer'],
+            'required' => [['group_id', 'name'], 'required'],
+            'smallint Unsigned' => [['id','sys_company_id','group_id'],'integer' ,'min' => 0 ,'max' => 65535],
             [['name'], 'string', 'max' => 50],
             [['group_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDimGroup::className(), 'targetAttribute' => ['group_id' => 'id']]
         ];
@@ -52,6 +53,7 @@ abstract class AcDim extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
+            'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
             'group_id' => Yii::t('d3acc', 'Ac_dim_group'),
             'name' => Yii::t('d3acc', 'Name'),
         ];
@@ -60,7 +62,7 @@ abstract class AcDim extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeHints()
+    public function attributeHints(): array
     {
         return array_merge(parent::attributeHints(), [
             'group_id' => Yii::t('d3acc', 'Ac_dim_group'),
@@ -71,9 +73,9 @@ abstract class AcDim extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getGroup()
+    public function getAcPeriodBalanceDims()
     {
-        return $this->hasOne(\d3acc\models\AcDimGroup::className(), ['id' => 'group_id']);
+        return $this->hasMany(\d3acc\models\AcPeriodBalanceDim::className(), ['dim_id' => 'id']);
     }
 
     /**
@@ -84,25 +86,12 @@ abstract class AcDim extends \yii\db\ActiveRecord
         return $this->hasMany(\d3acc\models\AcTranDim::className(), ['dim_id' => 'id']);
     }
 
-
     /**
-     * @return \d3acc\models\AcTranDim     */
-    public function newAcTranDims()
+     * @return \yii\db\ActiveQuery
+     */
+    public function getGroup()
     {
-        if ($this->getIsNewRecord()){
-            throw new Exception('Can not create new related record for new record!');
-        }
-        $model = new \d3acc\models\AcTranDim();
-        $model->dim_id = $this->id;
-        return $model;
+        return $this->hasOne(\d3acc\models\AcDimGroup::className(), ['id' => 'group_id']);
     }
 
-
-
-    public function saveOrException($runValidation = true, $attributeNames = null)
-    {
-        if(!parent::save($runValidation, $attributeNames)){
-            throw new Exception(json_encode($this->getErrors()));
-        }
-    }
 }
