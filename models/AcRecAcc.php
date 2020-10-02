@@ -28,7 +28,7 @@ class AcRecAcc extends BaseAcRecAcc
          */
         $findRecRef = self::find()->where([
             'account_id' => $accId,
-            'sys_company_id' => $sysCompanyId
+            'ac_rec_acc.sys_company_id' => $sysCompanyId
         ]);
         if ($ref) {
             foreach ($acc->getAcDefs()->all() as $acDef) {
@@ -114,7 +114,7 @@ class AcRecAcc extends BaseAcRecAcc
          */
         $findRecRef = self::find()->where([
             'account_id' => $accId,
-            'sys_company_id' => $sysCompanyId
+            'ac_rec_acc.sys_company_id' => $sysCompanyId
         ]);
 
         foreach ($acc->getAcDefs()->all() as $acDef) {

@@ -4,30 +4,44 @@
  */
 namespace d3acc\components;
 
+use Exception;
+use Throwable;
 use Yii;
 use d3acc\models\AcAccount;
 use d3acc\models\AcDef;
 use d3acc\models\AcRecAcc;
 use d3acc\models\AcRecRef;
+use yii\db\StaleObjectException;
 use yii\helpers\ArrayHelper;
 
 class AccConstructor
 {
     /** @var AcAccount */
     private $account;
-    
+    /**
+     * @var int
+     */
+    private $sysCompanyId;
+
+    public function __construct(int $sysCompanyId)
+    {
+        $this->sysCompanyId = $sysCompanyId;
+    }
+
     /**
      * @param string $code
      * @param string $name
+     * @throws Exception
      */
-    public function create(string $code, string $name)
+    public function create(string $code, string $name): void
     {
         $this->account = new AcAccount();
+        $this->account->sys_company_id = $this->sysCompanyId;
         $this->account->code = $code;
         $this->account->name = $name;
 
         if (!$this->account->save()) {
-            throw new \Exception('Can not create AcAccount: '.json_encode($this->account->getErrors()));
+            throw new Exception('Can not create AcAccount: '.json_encode($this->account->getErrors()));
         }
 
     }
@@ -43,17 +57,18 @@ class AccConstructor
     /**
      * @param string $table
      * @param string $pkField
-     * @return d3acc\models\AcDef created model
+     * @return AcDef created model
      */
     public function addDimension(string $table, string $pkField = 'id')
     {
         $model = new AcDef();
+        $model->sys_company_id = $this->sysCompanyId;
         $model->account_id = $this->account->id;
         $model->table = $table;
         $model->pk_field = $pkField;
 
         if (!$model->save()) {
-            throw new \Exception('Can not create AcDef: '.json_encode($model->getErrors()));
+            throw new Exception('Can not create AcDef: '.json_encode($model->getErrors()));
         }
         return $model;
     }
@@ -64,31 +79,40 @@ class AccConstructor
      */
     public function changeDimensionName(string $oldTable, string $newTable)
     {
-        $def = AcDef::findOne(['account_id' => $this->account->id,'table' => $oldTable]);
+        $def = AcDef::findOne([
+            'sys_company_id' => $this->sysCompanyId,
+            'account_id' => $this->account->id,
+            'table' => $oldTable
+        ]);
 
         if($def){
             $def->table = $newTable;
             if (!$def->update()) {
-                throw new \Exception('Can not update AcDef: '.json_encode($def->getErrors()));
+                throw new Exception('Can not update AcDef: '.json_encode($def->getErrors()));
             }
         }
 
-        $accountRecAccList = AcRecAcc::findAll(['account_id' => $this->account->id]);
+        $accountRecAccList = AcRecAcc::findAll([
+            'account_id' => $this->account->id,
+            'sys_company_id' => $this->sysCompanyId,
+        ]);
         foreach ($accountRecAccList as $recAcc){
-            self::recalculateLabel($recAcc->id);
+            $this->recalculateLabel($recAcc->id);
         }
     }
 
     /**
      * @return AcRecAcc
-     * @throws \Exception
+     * @throws Exception
      */
-    public function addExtendedAccount(){
+    public function addExtendedAccount(): AcRecAcc
+    {
         $extendedAccount = new AcRecAcc();
+        $extendedAccount->sys_company_id = $this->sysCompanyId;
         $extendedAccount->account_id = $this->account->id;
         $extendedAccount->label = $this->account->name;
         if (!$extendedAccount->save()) {
-            throw new \Exception('Can not create ac_rec_ref: '.json_encode($extendedAccount->getErrors()));
+            throw new Exception('Can not create ac_rec_ref: '.json_encode($extendedAccount->getErrors()));
         }
         return $extendedAccount;
     }
@@ -101,33 +125,51 @@ class AccConstructor
     public function addDimensionRecAcc(int $recAcountId, int $defId, int $pkValue)
     {
         /**Check if already exists ac_rec_ref*/
-        $dimensionRecAcc = AcRecRef::findOne(['rec_account_id' => $recAcountId,'def_id' => $defId]);
+        $dimensionRecAcc = AcRecRef::findOne([
+            'rec_account_id' => $recAcountId,
+            'def_id' => $defId,
+            'sys_company_id' => $this->sysCompanyId
+        ]);
 
         /**If not exists then create record*/
         if(!$dimensionRecAcc){
             $dimensionRecAcc = new AcRecRef();
+            $dimensionRecAcc->sys_company_id = $this->sysCompanyId;
             $dimensionRecAcc->rec_account_id = $recAcountId;
             $dimensionRecAcc->def_id = $defId;
             $dimensionRecAcc->pk_value = $pkValue;
 
             if (!$dimensionRecAcc->save()) {
-                throw new \Exception('Can not create ac_rec_ref: '.json_encode($ac_rec_ref_model->getErrors()));
+                throw new Exception('Can not create ac_rec_ref: '.json_encode($dimensionRecAcc->getErrors()));
             }
-            else{
-                self::recalculateLabel($recAcountId);
-            }
+
+            $this->recalculateLabel($recAcountId);
         }
     }
 
     /**
-     * @throws Exception
+     * @param int $recAccId
+     * @throws Throwable
+     * @throws \yii\db\Exception
+     * @throws StaleObjectException
      */
-    private function recalculateLabel(int $recAccId)
+    private function recalculateLabel(int $recAccId): void
     {
-        $ac_def_models = AcDef::findAll(['account_id' => $this->account->id]);
-        $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
+        $ac_def_models = AcDef::findAll([
+            'account_id' => $this->account->id,
+            'sys_company_id' => $this->sysCompanyId,
+        ]);
+        $tableModels = Yii::$app->getModule('d3acc')->tableModels;
 
-        $sql = 'SELECT def_id, pk_value FROM `ac_rec_ref` WHERE `rec_account_id`='.$recAccId;
+        $sql = '
+            SELECT 
+                def_id, 
+                pk_value 
+            FROM 
+                `ac_rec_ref` 
+            WHERE 
+                `rec_account_id`='.$recAccId .'
+                AND sys_company_id = ' .$this->sysCompanyId ;
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand($sql);
         $rows = $command->queryAll();
@@ -155,7 +197,7 @@ class AccConstructor
         if(!$acRecAcc->update()){
             $error = $acRecAcc->getErrors();
             if(count($error)>0){
-                throw new \Exception('Error: ' .json_encode($error));
+                throw new Exception('Error: ' .json_encode($error));
             }
 
         }
