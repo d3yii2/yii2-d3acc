@@ -42,7 +42,7 @@ abstract class AcDef extends \yii\db\ActiveRecord
         return [
             'required' => [['account_id'], 'required'],
             'smallint Unsigned' => [['id','sys_company_id','account_id'],'integer' ,'min' => 0 ,'max' => 65535],
-            [['code'], 'string', 'max' => 10],
+            [['code'], 'string', 'max' => 20],
             [['table', 'pk_field'], 'string', 'max' => 100],
             [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::className(), 'targetAttribute' => ['account_id' => 'id']]
         ];

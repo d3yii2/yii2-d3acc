@@ -1,15 +1,8 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: aivars
- * Date: 18.14.9
- * Time: 21:33
- */
 
 namespace d3acc\components;
 
 use Exception;
-use Yii;
 use d3acc\models\AcDimGroup;
 use d3acc\models\AcDim;
 
@@ -35,11 +28,15 @@ class  DimConstructor
      * @param string $name
      * Adds new virtual dimension group
      * Group names must be unique
+     * @param int $id
      * @throws Exception
      */
-    public function addGroup(string $name)
+    public function addGroup(string $name, int $id = 0): void
     {
         $group = new AcDimGroup();
+        if($id){
+            $group->id = $id;
+        }
         $group->sys_company_id = $this->sysCompanyId;
         $group->name = $name;
         if (!$group->save()) {
@@ -50,12 +47,19 @@ class  DimConstructor
     /**
      * @param string $groupName
      * @param string $dimensionName
-     * @throws Exception
-     * Adds new virtual dimension
+     * @param int $id
+     * @throws Exception Adds new virtual dimension
      */
-    public function addGroupDimension(string $groupName, string $dimensionName)
+    public function addGroupDimension(
+        string $groupName,
+        string $dimensionName,
+        int $id = 0
+    ): void
     {
         $accDim = new AcDim();
+        if($id){
+            $accDim->id = $id;
+        }
         $accDim->sys_company_id = $this->sysCompanyId;
         $accDim->name = $dimensionName;
         $accDim->group_id = $this->getAccDimGroupId($groupName);
@@ -70,7 +74,7 @@ class  DimConstructor
      * @throws Exception
      * Gets virtual diemansion group by name, this sets requirement for unique group names
      */
-    private function getAccDimGroupId(string $groupName)
+    private function getAccDimGroupId(string $groupName): int
     {
         if (empty($this->ac_dim_groups)) {
             /** @var AcDimGroup $acDimGroup */

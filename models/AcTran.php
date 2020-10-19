@@ -1085,7 +1085,6 @@ class AcTran extends BaseAcTran
 
             if (isset($filter[$acDef->table])) {
                 $joinSql .= ' AND '.$tableAsName.'.`pk_value` = '.$filter[$acDef->table];
-                ;
             }
             $join[] = $joinSql;
         }

@@ -23,8 +23,11 @@ class PeriodBase
     public static function init(string $date, int $periodType, int $sysCompanyId): AcPeriod
     {
 
-        if (AcPeriod::findAll(['period_type' => $periodType])) {
-            throw new Exception('Period type '.$periodType.' already exist');
+        if (AcPeriod::findAll([
+            'period_type' => $periodType,
+            'sys_company_id' => $sysCompanyId
+        ])) {
+            throw new Exception('Period type '.$periodType.' already exist for sysCompanyid: ' .$sysCompanyId);
         }
 
         $period              = new AcPeriod();
