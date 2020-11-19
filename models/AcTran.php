@@ -7,6 +7,8 @@
 
 namespace d3acc\models;
 
+use d3system\exceptions\D3ActiveRecordException;
+use Exception;
 use Yii;
 use d3acc\models\base\AcTran as BaseAcTran;
 use yii\helpers\ArrayHelper;
@@ -18,54 +20,49 @@ use yii\db\Expression;
 class AcTran extends BaseAcTran
 {
 
-    public static $period ;
+
     /**
      * registre transaction
-     * @param \d3acc\models\AcRecAcc $debitAcc
-     * @param \d3acc\models\AcRecAcc $creditAcc
+     * @param AcRecAcc $debitAcc
+     * @param AcRecAcc $creditAcc
      * @param float $amt
-     * @param string $date date format yyyy-mm-dd
-     * @param int $periodType
-     * @param string|bool $code
+     * @param string $date
+     * @param AcPeriod $period
+     * @param int $userId
      * @param string|Expression|bool $tranTime
-     * @return \d3acc\models\AcTran
-     * @return string $code transaction code
-     * @throws \Exception
+     * @param string $code
+     * @return AcTran
+     * @throws D3ActiveRecordException
      */
-    public static function registre(
-    AcRecAcc $debitAcc, AcRecAcc $creditAcc, $amt, $date, $periodType,
-    $code = false, $tranTime =  false
+    public static function registre2(
+        AcRecAcc $debitAcc,
+        AcRecAcc $creditAcc,
+        float $amt,
+        string $date,
+        AcPeriod $period,
+        int $userId,
+        string $tranTime = '',
+        string $code = ''
+
     )
     {
         if (!$debitAcc) {
-            throw new \Exception('Undefined debit account');
+            throw new Exception('Undefined debit account');
         }
         if (!$creditAcc) {
-            throw new \Exception('Undefined credit account');
+            throw new Exception('Undefined credit account');
         }
         if (!$amt) {
-            throw new \Exception('Undefined amount');
-        }
-        if (!$date) {
-            throw new \Exception('Undefined date');
-        }
-        if (!$periodType) {
-            throw new \Exception('Undefined period type');
+            throw new Exception('Undefined amount');
         }
         if ($amt < 0) {
-            throw new \Exception('Ilegal transaction amount: ' . $amt);
+            throw new Exception('Ilegal transaction amount: ' . $amt);
         }
-
-        if(!self::$period) {
-            $period = AcPeriod::getActivePeriod($periodType, $date);
-        }else{
-            $period = self::$period;
+        if (!$date) {
+            throw new Exception('Undefined date');
         }
-
-        if (PHP_SAPI === "cli"){
-            $userId = 7;//uldis
-        }else{
-            $userId = \Yii::$app->user->identity->id;
+        if (!$userId) {
+            throw new Exception('undefined user');
         }
 
         if(!$tranTime ){
@@ -73,6 +70,7 @@ class AcTran extends BaseAcTran
         }
 
         $model                    = new self();
+        $model->sys_company_id = $period->sys_company_id;
         $model->period_id         = $period->id;
         $model->accounting_date   = $date;
         $model->debit_rec_acc_id  = $debitAcc->id;
@@ -84,7 +82,7 @@ class AcTran extends BaseAcTran
             $model->code = $code;
         }
         if (!$model->save()) {
-            throw new \Exception('Can not create transaction: '.json_encode($model->getErrors()));
+            throw new D3ActiveRecordException($model);
         }
 
         return $model;
@@ -765,11 +763,10 @@ class AcTran extends BaseAcTran
 
     /**
      * get account balance for period filtered by other account and grouped by days
-     * @param \d3acc\models\AcRecAcc $acc
-     * @param \d3acc\models\AcRecAcc|array $accFilter
-     * @param \d3acc\models\AcPeriod $period
-     * @return decimal
-     */
+     * @param AcRecAcc $acc
+     * @param AcRecAcc|array $accFilter
+     * @param AcPeriod $period
+ */
     public static function accFilterAccPeriodBalanceByDays(AcRecAcc $acc,
                                                            $accFilter,
                                                            AcPeriod $period)
@@ -823,9 +820,9 @@ class AcTran extends BaseAcTran
      * for account list get total balance by days for period
      * 
      * @param array $accList array of \d3acc\models\AcRecAcc elements
-     * @param \d3acc\models\AcPeriod $period
+     * @param AcPeriod $period
      * @return array
-     * @throws \Exception
+     * @throws Exception
      */
     public static function accFilterExtPeriodBalanceByDays($accList,
                                                            AcPeriod $period)
@@ -842,7 +839,7 @@ class AcTran extends BaseAcTran
         foreach ($accList as $acc) {
 
             if ($accId && $accId !== $acc->account_id) {
-                throw new \Exception('In Acc list mixed diferents accounts');
+                throw new Exception('In Acc list mixed diferents accounts');
             }
             $accId = $acc->account_id;
         }
@@ -910,7 +907,7 @@ class AcTran extends BaseAcTran
      * Balance account filtered by table values  
      * 
      * @param int $accountId
-     * @param \d3acc\models\AcPeriod $period
+     * @param AcPeriod $period
      * @param array $filter
      * @return int
      */
@@ -984,12 +981,18 @@ class AcTran extends BaseAcTran
      * Balance account filtered by table values
      *
      * @param int $accountId
-     * @param \d3acc\models\AcPeriod $period
+     * @param AcPeriod $period
      * @param array $filter
-     * @return int
+     * @param bool $addPrevBalance
+     * @return float
+     * @throws \yii\db\Exception
      */
-    public static function accBalanceFilter($accountId, AcPeriod $period,
-                                           $filter, $addPrevPalance = false)
+    public static function accBalanceFilter(
+        int $accountId,
+        AcPeriod $period,
+        array $filter,
+        bool $addPrevBalance = false
+    ): float
     {
         $join = [];
         foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
@@ -1032,7 +1035,7 @@ class AcTran extends BaseAcTran
 
         $balance =  $command->queryScalar();
 
-        if($addPrevPalance){
+        if($addPrevBalance){
             $command    = $connection->createCommand('
                 SELECT
                     IFNULL(SUM(IFNULL(b.amount,0)),0)
@@ -1082,7 +1085,6 @@ class AcTran extends BaseAcTran
 
             if (isset($filter[$acDef->table])) {
                 $joinSql .= ' AND '.$tableAsName.'.`pk_value` = '.$filter[$acDef->table];
-                ;
             }
             $join[] = $joinSql;
         }

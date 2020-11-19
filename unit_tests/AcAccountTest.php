@@ -36,12 +36,14 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $this->acc->save();
 
         $this->acDef1             = new AcDef();
+        $this->acDef1->sys_company_id = 1;
         $this->acDef1->account_id = $this->acc->id;
         $this->acDef1->table      = 'Test01';
         $this->acDef1->pk_field   = 'id';
         $this->acDef1->save();
 
         $this->acDef2             = new AcDef();
+        $this->acDef2->sys_company_id = 1;
         $this->acDef2->account_id = $this->acc->id;
         $this->acDef2->table      = 'Test02';
         $this->acDef2->pk_field   = 'id';
@@ -60,6 +62,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $acDef1->save();
 
         $period = new AcPeriod();
+        $period->sys_company_id = 1;
         $period->period_type = self::PERIOD_TYPE;
         $period->status = AcPeriod::STATUS_CLOSED;
         $period->from = '2016-09-01';
@@ -67,6 +70,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $period->save();
 
         $period = new AcPeriod();
+        $period->sys_company_id = 1;
         $period->period_type = self::PERIOD_TYPE;
         $period->status = AcPeriod::STATUS_ACTIVE;
         $period->from = '2016-10-01';
@@ -110,7 +114,10 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
     }
 
     public function deletePeriodType($type){
-        foreach(AcPeriod::find()->where(['period_type' => self::PERIOD_TYPE])->orderBy(['id'=> SORT_DESC])->all() as $period){
+        foreach(AcPeriod::find()->where([
+            'period_type' => self::PERIOD_TYPE,
+            'sys_company_id' => 1
+        ])->orderBy(['id'=> SORT_DESC])->all() as $period){
             $period->delete();
         }
     }
@@ -141,18 +148,17 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         /**
          * get periods
          */
-        $period = AcPeriod::getActivePeriod(self::PERIOD_TYPE, '2016-09-02');
+        $period = AcPeriod::getActivePeriod(1,self::PERIOD_TYPE, '2016-09-02');
         $this->assertTrue(!$period);
 
-        $period = AcPeriod::getActivePeriod(self::PERIOD_TYPE, '2016-10-02');
+        $period = AcPeriod::getActivePeriod(1,self::PERIOD_TYPE, '2016-10-02');
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
         /**
          * registre transaction
          */
         $amt = 100;
-        $tran = AcTran::registre($recAccDebit, $recAccCredit, $amt, '2016.10.11',
-                self::PERIOD_TYPE);
+        $tran = Yii::$app->acc->regTran($recAccDebit, $recAccCredit, $amt, '2016.10.11');
         $this->assertInstanceOf('\d3acc\models\AcTran', $tran);
 
         $debitBalance = AcTran::accPeriodBalance($recAccDebit, $period);
@@ -185,7 +191,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         /**
          * close period
          */
-        $newPeriod = PeriodMonth::close(self::PERIOD_TYPE);
+        $newPeriod = PeriodMonth::close(self::PERIOD_TYPE,1);
 
         /**
          * check new period balance

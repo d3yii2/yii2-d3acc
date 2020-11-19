@@ -20,8 +20,19 @@ class AcPeriodBalanceDim extends BaseAcPeriodBalanceDim
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
-            INSERT INTO ac_period_balance_dim (period_id,dim_id,amount, account_id)
-            SELECT :period_id AS period_id, tmp.dim_id, SUM(tmp.amount) AS amount, accountId AS account_id
+            INSERT INTO ac_period_balance_dim (
+                sys_company_id,
+                period_id,
+                dim_id,
+                amount, 
+                account_id
+            )
+            SELECT 
+                :sysCompanyId AS sysCompanyId,    
+                :period_id AS period_id, 
+                tmp.dim_id, 
+                SUM(tmp.amount) AS amount, 
+                accountId AS account_id
             FROM(
             SELECT 
 		          account.Id AS accountId,
@@ -66,6 +77,7 @@ class AcPeriodBalanceDim extends BaseAcPeriodBalanceDim
             GROUP BY tmp.dim_id, tmp.accountId
             ',
             [
+                ':sysCompanyId' => $period->sys_company_id,
                 ':period_id' => $period->id,
                 ':prev_period_id' => $period->prev_period,
             ]);

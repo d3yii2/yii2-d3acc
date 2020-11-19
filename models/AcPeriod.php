@@ -13,14 +13,18 @@ class AcPeriod extends BaseAcPeriod
 {
     /**
      * find active period
+     * @param int $sysCompanyId
      * @param int $periodType
      * @param string|bool $date date format yyy-mm-dd
      * @return AcPeriod
      */
-    public static function getActivePeriod($periodType, $date = false): AcPeriod
+    public static function getActivePeriod(int $sysCompanyId, int $periodType, string $date = ''): AcPeriod
     {
         $query = self::find()
-            ->where(['period_type' => $periodType])
+            ->where([
+                'period_type' => $periodType,
+                'sys_company_id' => $sysCompanyId
+            ])
             ->orderBy(['from' => SORT_ASC]);
 
         if ($date) {
@@ -29,8 +33,7 @@ class AcPeriod extends BaseAcPeriod
             $query->andWhere(['status' => self::STATUS_ACTIVE]);
         }
         /** @var AcPeriod $period */
-        $period = $query->one();
-        return $period;
+        return $query->one();
 
     }
 

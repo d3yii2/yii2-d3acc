@@ -2,9 +2,8 @@
 
 namespace d3acc\models;
 
-use Yii;
 use \d3acc\models\base\AcRecAcc as BaseAcRecAcc;
-use yii\helpers\ArrayHelper;
+use yii\db\Exception;
 
 /**
  * This is the model class for table "ac_rec_acc".
@@ -15,17 +14,22 @@ class AcRecAcc extends BaseAcRecAcc
     /**
      * get record accounts
      * @param int $accId
-     * @param array $ref
+     * @param int $sysCompanyId
+     * @param bool $ref
      * @return AcRecAcc
+     * @throws Exception
      */
-    public static function getAcc($accId, $ref = false)
+    public static function getAcc(int $accId, int $sysCompanyId, $ref = false)
     {
-        $acc = AcAccount::getValidatedAcc($accId, $ref);
+        $acc = AcAccount::getValidatedAcc($accId,  $ref);
 
         /**
          * search account
          */
-        $findRecRef = self::find()->where(['account_id' => $accId]);
+        $findRecRef = self::find()->where([
+            'account_id' => $accId,
+            'ac_rec_acc.sys_company_id' => $sysCompanyId
+        ]);
         if ($ref) {
             foreach ($acc->getAcDefs()->all() as $acDef) {
                 $tableAsName = '`r'.$acDef->table.'`';
@@ -66,6 +70,7 @@ class AcRecAcc extends BaseAcRecAcc
         }
 
         $model             = new AcRecAcc();
+        $model->sys_company_id = $sysCompanyId;
         $model->account_id = $accId;
         $model->label      = implode(', ', $label);
         if(!$model->save()){
@@ -76,6 +81,7 @@ class AcRecAcc extends BaseAcRecAcc
         if ($ref) {
             foreach ($acc->getAcDefs()->all() as $acDef) {
                 $modelRecRef                 = new AcRecRef();
+                $modelRecRef->sys_company_id = $sysCompanyId;
                 $modelRecRef->def_id         = $acDef->id;
                 $modelRecRef->rec_account_id = $model->id;
                 $modelRecRef->pk_value       = $ref[$acDef->table];
@@ -95,17 +101,21 @@ class AcRecAcc extends BaseAcRecAcc
     /**
      * search accounts
      * @param int $accId
+     * @param int $sysCompanyId
      * @param array $ref
      * @return array
      */
-    public static function filterAcc($accId, $ref)
+    public static function filterAcc(int $accId,int $sysCompanyId, $ref)
     {
         $acc = AcAccount::findOne($accId);
 
         /**
          * search account
          */
-        $findRecRef = self::find()->where(['account_id' => $accId]);
+        $findRecRef = self::find()->where([
+            'account_id' => $accId,
+            'ac_rec_acc.sys_company_id' => $sysCompanyId
+        ]);
 
         foreach ($acc->getAcDefs()->all() as $acDef) {
             if(!isset($ref[$acDef->table])){

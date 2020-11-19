@@ -4,6 +4,8 @@ namespace d3acc\models;
 
 use Yii;
 use \d3acc\models\base\AcPeriodBalance as BaseAcPeriodBalance;
+use yii\db\DataReader;
+use yii\db\Exception;
 use yii\helpers\ArrayHelper;
 
 /**
@@ -14,15 +16,22 @@ class AcPeriodBalance extends BaseAcPeriodBalance
 
     /**
      * save period balance
-     * @param \d3acc\models\AcPeriod $period
-     * @return type
+     * @param AcPeriod $period
+     * @return DataReader
+     * @throws Exception
      */
     public static function savePeriodBalance(AcPeriod $period)
     {
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
-            INSERT INTO ac_period_balance (period_id, rec_acc_id, amount)
+            INSERT INTO ac_period_balance (
+                sys_company_id,
+                period_id, 
+                rec_acc_id, 
+                amount
+            )
             SELECT
+              :sysCompanyId,
               :period_id,
               rec_acc_id,
               SUM(amount) amount
@@ -53,6 +62,7 @@ class AcPeriodBalance extends BaseAcPeriodBalance
             GROUP BY rec_acc_id
         ',
             [
+            ':sysCompanyId' => $period->sys_company_id,
             ':period_id' => $period->id,
             ':prev_period_id' => $period->prev_period,
         ]);
@@ -62,9 +72,10 @@ class AcPeriodBalance extends BaseAcPeriodBalance
 
     /**
      * get account period start balance
-     * @param \d3acc\models\AcRecAcc $acc
-     * @param \d3acc\models\AcPeriod $period
+     * @param AcRecAcc $acc
+     * @param AcPeriod $period
      * @return int
+     * @throws Exception
      */
     public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period)
     {

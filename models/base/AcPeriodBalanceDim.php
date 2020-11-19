@@ -5,12 +5,13 @@
 namespace d3acc\models\base;
 
 use Yii;
-use yii\db\Exception;
+
 
 /**
  * This is the base-model class for table "ac_period_balance_dim".
  *
  * @property integer $id
+ * @property integer $sys_company_id
  * @property integer $period_id
  * @property integer $dim_id
  * @property string $amount
@@ -29,7 +30,7 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'ac_period_balance_dim';
     }
@@ -41,8 +42,9 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['period_id', 'dim_id', 'amount', 'account_id'], 'required'],
-            [['period_id', 'dim_id', 'account_id'], 'integer'],
+            'required' => [['period_id', 'dim_id', 'amount', 'account_id'], 'required'],
+            'smallint Unsigned' => [['sys_company_id','period_id','dim_id','account_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            'integer Unsigned' => [['id'],'integer' ,'min' => 0 ,'max' => 4294967295],
             [['amount'], 'number'],
             [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::className(), 'targetAttribute' => ['account_id' => 'id']],
             [['dim_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDim::className(), 'targetAttribute' => ['dim_id' => 'id']],
@@ -57,6 +59,7 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
+            'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
             'period_id' => Yii::t('d3acc', 'Period'),
             'dim_id' => Yii::t('d3acc', 'Dimension'),
             'amount' => Yii::t('d3acc', 'Amount'),
@@ -67,7 +70,7 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public function attributeHints()
+    public function attributeHints(): array
     {
         return array_merge(parent::attributeHints(), [
             'period_id' => Yii::t('d3acc', 'Period'),
@@ -100,4 +103,8 @@ abstract class AcPeriodBalanceDim extends \yii\db\ActiveRecord
     {
         return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'period_id']);
     }
+
+
+
+
 }

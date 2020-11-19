@@ -22,7 +22,10 @@ class PeriodMonthTest extends \PHPUnit_Framework_TestCase
 
     public function deletePeriodType($type)
     {
-        foreach (AcPeriod::findAll(['period_type' => $type]) as $period) {
+        foreach (AcPeriod::findAll([
+            'period_type' => $type,
+            'sys_company_id' => 1
+        ]) as $period) {
             if($nextPeriod = $period->getNextPeriod()->one()){
                 $nextPeriod->prev_period = null;
                 $nextPeriod->save();
@@ -38,19 +41,19 @@ class PeriodMonthTest extends \PHPUnit_Framework_TestCase
     public function testInit()
     {
         //INIT
-        $period = PeriodMonth::init('2015-01-05', self::PERIOD_TYPE);
+        $period = PeriodMonth::init('2015-01-05', self::PERIOD_TYPE,1);
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
         //VALIDATE ACTIVE PERIOD
-        $activePeriod = AcPeriod::getActivePeriod(self::PERIOD_TYPE);
+        $activePeriod = AcPeriod::getActivePeriod(1,self::PERIOD_TYPE);
         $this->assertEquals($activePeriod->id, $period->id);
 
         //ADD NEXT
-        $period = PeriodMonth::close(self::PERIOD_TYPE);
+        $period = PeriodMonth::close(1,self::PERIOD_TYPE,1);
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
         //VALIDATE ACTIVE PERIOD
-        $activePeriod = AcPeriod::getActivePeriod(self::PERIOD_TYPE);
+        $activePeriod = AcPeriod::getActivePeriod(1,self::PERIOD_TYPE);
         $this->assertEquals($activePeriod->id, $period->id);
     }
 }

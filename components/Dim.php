@@ -5,6 +5,7 @@ namespace d3acc\components;
 use d3acc\models\AcDim;
 use d3acc\models\AcTranDim;
 use d3acc\models\AcTran;
+use Exception;
 
 class Dim{
 
@@ -25,29 +26,31 @@ class Dim{
      *  All available virtual dimensions
      */
     public $acc_dims;
+    private $sysCompanyId;
 
     /**
      * Dim constructor.
      * @param AcTran $accTran
      */
-    public function __construct(AcTran $accTran){
+    public function __construct(AcTran $accTran, int $sysCompanyId){
         $this->acc_tran = $accTran;
         $this->acc_tran_dims = [];
+        $this->sysCompanyId = $sysCompanyId;
     }
 
     /**
      * @param integer $acDimId
      * @return AcDim
-     * @throws \Exception
+     * @throws Exception
      */
-    private function getAccDim($acDimId): AcDim
+    private function getAccDim(int $acDimId): AcDim
     {
         if(!$this->acc_dims){
-            foreach(AcDim::find()->all() as $acDim) {
+            foreach(AcDim::find()->where(['sys_company_id' => $this->sysCompanyId])->all() as $acDim) {
                 $this->acc_dims[$acDim->id] = $acDim;
             }
             if(!$this->acc_dims) {
-                throw new \Exception('No virtual dimensions found!');
+                throw new Exception('No virtual dimensions found!');
             }
         }
         return $this->acc_dims[$acDimId];
@@ -58,7 +61,7 @@ class Dim{
      * @param float $amt
      * @param string $notes
      */
-    public function addDim($dimId, $amt, $notes)
+    public function addDim(int $dimId, float $amt, string $notes): void
     {
         $tranDim = new AcTranDim();
         $tranDim->dim_id = $dimId;
@@ -72,7 +75,7 @@ class Dim{
      * @param integer $dimId
      * @param string $notes
      */
-    public function addDimCalcLast($dimId, $notes = null){
+    public function addDimCalcLast(int $dimId, $notes = ''){
         $dimAmt = 0;
         /** @var AcTranDim $tran_dim */
         foreach ($this->acc_tran_dims as $tran_dim)
@@ -84,7 +87,7 @@ class Dim{
     }
 
     /**
-     * @throws \Exception
+     * @throws Exception
      */
     public function save(){
         $dimAmt = 0;
@@ -98,7 +101,7 @@ class Dim{
             if(count($this->acc_tran_dims) > 1) {
                 $accDim = $this->getAccDim($tran_dim->dim_id);
                 if ($dimGroup && $dimGroup !== $accDim->group_id) {
-                    throw new \Exception('Different dimension group!');
+                    throw new Exception('Different dimension group!');
                 }
                 $dimGroup = $accDim->group_id;
             }
@@ -109,7 +112,7 @@ class Dim{
          * total must be equal transaction amount
          */
         if((float)$this->acc_tran->amount !== (float)$dimAmt){
-            throw new \Exception('Dimension sum not equal to transaction amount!');
+            throw new Exception('Dimension sum not equal to transaction amount!');
         }
 
 

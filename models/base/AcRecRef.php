@@ -6,10 +6,12 @@ namespace d3acc\models\base;
 
 use Yii;
 
+
 /**
  * This is the base-model class for table "ac_rec_ref".
  *
  * @property integer $id
+ * @property integer $sys_company_id
  * @property integer $def_id
  * @property integer $rec_account_id
  * @property string $pk_value
@@ -26,7 +28,7 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
     /**
      * @inheritdoc
      */
-    public static function tableName()
+    public static function tableName(): string
     {
         return 'ac_rec_ref';
     }
@@ -38,10 +40,12 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
     public function rules()
     {
         return [
-            [['def_id', 'rec_account_id', 'pk_value'], 'required'],
-            [['def_id', 'rec_account_id', 'pk_value'], 'integer'],
-            [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDef::className(), 'targetAttribute' => ['def_id' => 'id']],
-            [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['rec_account_id' => 'id']]
+            'required' => [['def_id', 'rec_account_id', 'pk_value'], 'required'],
+            'smallint Unsigned' => [['sys_company_id','def_id','rec_account_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            'smallint Signed' => [['id'],'integer' ,'min' => -32768 ,'max' => 32767],
+            'bigint Unsigned' => [['pk_value'],'integer' ,'min' => 0 ,'max' => 1.844674407371E+19],
+            [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['rec_account_id' => 'id']],
+            [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDef::className(), 'targetAttribute' => ['def_id' => 'id']]
         ];
     }
 
@@ -52,6 +56,7 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
+            'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
             'def_id' => Yii::t('d3acc', 'Def ID'),
             'rec_account_id' => Yii::t('d3acc', 'Rec Account ID'),
             'pk_value' => Yii::t('d3acc', 'Pk Value'),
