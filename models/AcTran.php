@@ -124,6 +124,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY debit_rec_acc_id
                   UNION
                   SELECT
@@ -132,6 +133,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY credit_rec_acc_id
                   '.$unionPrevBalanceSql.'
                   ) a
@@ -143,6 +145,7 @@ class AcTran extends BaseAcTran
             [
             ':period_id' => $period->id,
             ':prev_period_id' => $period->prev_period,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryAll();
@@ -174,6 +177,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY debit_rec_acc_id
                   UNION
                   SELECT
@@ -182,6 +186,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY credit_rec_acc_id
                     ) a
                   INNER JOIN ac_rec_acc ra
@@ -193,6 +198,7 @@ class AcTran extends BaseAcTran
           ',
             [
             ':period_id' => $period->id,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
         $tranData = $command->queryAll();
         $tranData = ArrayHelper::index($tranData, 'account_id');
@@ -270,6 +276,7 @@ class AcTran extends BaseAcTran
                     ON ac_tran.id = td.tran_id                         
                   WHERE 
                     period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY 
                     debit_rec_acc_id,
                     td.dim_id
@@ -284,6 +291,7 @@ class AcTran extends BaseAcTran
                         ON ac_tran.id = td.tran_id                       
                   WHERE 
                     period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY 
                     credit_rec_acc_id,
                     td.dim_id
@@ -307,6 +315,7 @@ class AcTran extends BaseAcTran
           ',[
             ':period_id' => $period->id,
             ':ac_dim_group_id' => $accDimGroupId,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
         $tranData = $command->queryAll();
         $tranData = ArrayHelper::index($tranData, 'account_id');
@@ -382,6 +391,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY
                     debit_rec_acc_id,
                     code
@@ -393,6 +403,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY
                     credit_rec_acc_id,
                     code
@@ -411,6 +422,7 @@ class AcTran extends BaseAcTran
             [
             ':period_id' => $period->id,
             ':account_id' => $accountId,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
         return  $command->queryAll();
     }
@@ -447,6 +459,7 @@ class AcTran extends BaseAcTran
                     LEFT OUTER JOIN ac_tran_dim dim
                       ON ac_tran.id = dim.tran_id
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY
                     debit_rec_acc_id,
                     dim.dim_id,
@@ -462,6 +475,7 @@ class AcTran extends BaseAcTran
                     LEFT OUTER JOIN ac_tran_dim dim
                       ON ac_tran.id = dim.tran_id                    
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY
                     credit_rec_acc_id,
                     dim.dim_id,
@@ -484,6 +498,7 @@ class AcTran extends BaseAcTran
             [
             ':period_id' => $period->id,
             ':account_id' => $accountId,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
         return  $command->queryAll();
     }
@@ -515,6 +530,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                   GROUP BY debit_rec_acc_id
                   UNION
                   SELECT
@@ -524,6 +540,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
                 UNION
                 select 
                     credit_rec_acc_id rec_acc_id,
@@ -550,6 +567,7 @@ class AcTran extends BaseAcTran
             [
             ':period_id' => $period->id,
             ':prev_period_id' => $period->prev_period,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryAll();
@@ -582,12 +600,14 @@ class AcTran extends BaseAcTran
             FROM
               ac_tran
             WHERE
-            period_id = :period_id
-            AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
+              period_id = :period_id
+              AND ac_tran.sys_company_id = :sysCompanyId
+              AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
           ',
             [
             ':acc_id' => $acc->id,
             ':period_id' => $period->id,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         $actualBalance = $command->queryScalar();
@@ -630,11 +650,13 @@ class AcTran extends BaseAcTran
                 AND racc.account_id = :account_id
             WHERE
                 t.period_id = :period_id
+                AND t.sys_company_id = :sysCompanyId
             GROUP BY t.code
           ',
             [
             ':account_id' => $accountId,
             ':period_id' => $period->id,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryAll();
@@ -680,12 +702,14 @@ class AcTran extends BaseAcTran
                 ON ac_tran.credit_rec_acc_id = c.id
             WHERE
                 period_id = :period_id
-                    AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
+                AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
+                AND ac_tran.sys_company_id = :sysCompanyId
             ORDER BY t_datetime
           ',
             [
             ':acc_id' => $acc->id,
             ':period_id' => $period->id,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         $tran        = $command->queryAll();
@@ -732,6 +756,7 @@ class AcTran extends BaseAcTran
               ac_tran
             WHERE
                 period_id = :period_id
+                AND ac_tran.sys_company_id = :sysCompanyId
                 AND  (
                     debit_rec_acc_id = :acc_id
                     OR
@@ -745,6 +770,7 @@ class AcTran extends BaseAcTran
             [
             ':acc_id' => $acc->id,
             ':period_id' => $period->id,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         $days = $command->queryAll();
@@ -798,6 +824,7 @@ class AcTran extends BaseAcTran
               ac_tran
             WHERE
                 period_id = :period_id
+                AND ac_tran.sys_company_id = :sysCompanyId
                 AND  (
                     debit_rec_acc_id = :acc_id AND credit_rec_acc_id in ('.$accFilterCsv.')
                     OR
@@ -811,6 +838,7 @@ class AcTran extends BaseAcTran
             [
             ':acc_id' => $acc->id,
             ':period_id' => $period->id,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryAll();
@@ -888,6 +916,7 @@ class AcTran extends BaseAcTran
               '.implode(PHP_EOL, $join).'
             WHERE
                 period_id = :period_id
+                AND ac_tran.sys_company_id = :sysCompanyId
                 AND  (
                     credit_rec_acc_id in ('.$accdIdInList.')
                     OR
@@ -898,7 +927,11 @@ class AcTran extends BaseAcTran
                 '.implode(PHP_EOL, $broupBy).'
             ORDER BY
                 accounting_date
-          ', [':period_id' => $period->id]);
+          ',
+            [
+                ':period_id' => $period->id,
+                ':sysCompanyId' => $period->sys_company_id
+            ]);
 
         return $command->queryAll();
     }
@@ -966,12 +999,14 @@ class AcTran extends BaseAcTran
             WHERE
                 ac_rec_acc.account_id = :account_id
                 AND ac_tran.period_id = :period_id
+                AND ac_tran.sys_company_id = :sysCompanyId
 
           ',
-            [
+          [
             ':period_id' => $period->id,
             ':prev_period_id' => $period->prev_period,
             ':account_id' => $accountId,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryScalar();
@@ -1026,12 +1061,15 @@ class AcTran extends BaseAcTran
             WHERE
                 ac_rec_acc.account_id = :account_id
                 AND ac_tran.period_id = :period_id
+                AND ac_tran.sys_company_id = :sysCompanyId
 
           ',
-            [
+          [
             ':period_id' => $period->id,
             ':account_id' => $accountId,
-        ]);
+             ':sysCompanyId' => $period->sys_company_id
+          ]
+        );
 
         $balance =  $command->queryScalar();
 
@@ -1047,11 +1085,12 @@ class AcTran extends BaseAcTran
                 WHERE
                     ac_rec_acc.account_id = :account_id
                     AND b.period_id = :prev_period_id
-
+                    AND b.sys_company_id = :sysCompanyId
               ',
                 [
                 ':prev_period_id' => $period->prev_period,
                 ':account_id' => $accountId,
+                ':sysCompanyId' => $period->sys_company_id
             ]);
 
             $balance +=  $command->queryScalar();
@@ -1107,6 +1146,7 @@ class AcTran extends BaseAcTran
             WHERE
                 ac_rec_acc.account_id = :account_id
                 AND period_id = :period_id
+                AND ac_tran.sys_company_id = :sysCompanyId
             GROUP BY
                 accounting_date
           ';
@@ -1116,6 +1156,7 @@ class AcTran extends BaseAcTran
             [
             ':period_id' => $period->id,
             ':account_id' => $accountId,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryAll();

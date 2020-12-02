@@ -16,9 +16,9 @@ class AcPeriod extends BaseAcPeriod
      * @param int $sysCompanyId
      * @param int $periodType
      * @param string|bool $date date format yyy-mm-dd
-     * @return AcPeriod
+     * @return AcPeriod|null
      */
-    public static function getActivePeriod(int $sysCompanyId, int $periodType, string $date = ''): AcPeriod
+    public static function getActivePeriod(int $sysCompanyId, int $periodType, string $date = '')
     {
         $query = self::find()
             ->where([

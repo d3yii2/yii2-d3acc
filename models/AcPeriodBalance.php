@@ -138,10 +138,12 @@ class AcPeriodBalance extends BaseAcPeriodBalance
             WHERE
                 ac_rec_acc.account_id = :account_id
                 AND b.period_id = :period_id
+                AND b.sys_company_id = :sysCompanyId
           ',
             [
             ':period_id' => $period->prev_period,
             ':account_id' => $accountId,
+            ':sysCompanyId' => $period->sys_company_id
         ]);
 
         return $command->queryAll();
