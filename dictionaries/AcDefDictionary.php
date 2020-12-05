@@ -23,6 +23,7 @@ class AcDefDictionary{
                         'name' => 'code',
                     ])
                     ->where(['sys_company_id' => $sysCompanyId])
+                    ->andWhere('NOT code IS NULL')
                     ->orderBy([
                         'code' => SORT_ASC,
                     ])
@@ -54,6 +55,6 @@ class AcDefDictionary{
 
     private static function createKey(int $sysCompanyId): string
     {
-        return self::CACHE_KEY_LIST . '-' . $sysCompanyId;
+        return self::CACHE_KEY_LIST . '=' . $sysCompanyId;
     }
 }
