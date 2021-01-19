@@ -42,7 +42,7 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
         return [
             'required' => [['def_id', 'rec_account_id', 'pk_value'], 'required'],
             'smallint Unsigned' => [['sys_company_id','def_id','rec_account_id'],'integer' ,'min' => 0 ,'max' => 65535],
-            'smallint Signed' => [['id'],'integer' ,'min' => -32768 ,'max' => 32767],
+            'integer Unsigned' => [['id'],'integer' ,'min' => 0 ,'max' => 4294967295],
             'bigint Unsigned' => [['pk_value'],'integer' ,'min' => 0 ,'max' => 1.844674407371E+19],
             [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['rec_account_id' => 'id']],
             [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDef::className(), 'targetAttribute' => ['def_id' => 'id']]
