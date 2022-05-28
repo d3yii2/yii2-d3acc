@@ -1045,24 +1045,34 @@ class AcTran extends BaseAcTran
 
         $connection = Yii::$app->getDb();
         $command    = $connection->createCommand('
-            SELECT
-              IFNULL(SUM(
-                CASE ac_rec_acc.id
-                  WHEN credit_rec_acc_id
-                  THEN ac_tran.amount
-                  ELSE - ac_tran.amount
-                END
-              ),0) amount
-            FROM
-              ac_tran
-              INNER JOIN ac_rec_acc
-                ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
-              '.implode(PHP_EOL, $join).'
-            WHERE
-                ac_rec_acc.account_id = :account_id
-                AND ac_tran.period_id = :period_id
-                AND ac_tran.sys_company_id = :sysCompanyId
-
+           SELECT
+             SUM(amount) 
+           FROM
+           (
+                SELECT
+                  IFNULL(SUM(ac_tran.amount),0) amount
+                FROM
+                  ac_tran
+                  INNER JOIN ac_rec_acc
+                    ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
+                  '.implode(PHP_EOL, $join).'
+                WHERE
+                    ac_rec_acc.account_id = :account_id
+                    AND ac_tran.period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId
+                UNION    
+                SELECT
+                  - IFNULL(SUM(ac_tran.amount),0) amount
+                FROM
+                  ac_tran
+                  INNER JOIN ac_rec_acc
+                    ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
+                  '.implode(PHP_EOL, $join).'
+                WHERE
+                    ac_rec_acc.account_id = :account_id
+                    AND ac_tran.period_id = :period_id
+                    AND ac_tran.sys_company_id = :sysCompanyId                
+           ) a     
           ',
           [
             ':period_id' => $period->id,
