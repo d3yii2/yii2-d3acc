@@ -1054,7 +1054,7 @@ class AcTran extends BaseAcTran
                 FROM
                   ac_tran
                   INNER JOIN ac_rec_acc
-                    ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
+                    ON ac_rec_acc.id = credit_rec_acc_id
                   '.implode(PHP_EOL, $join).'
                 WHERE
                     ac_rec_acc.account_id = :account_id
@@ -1066,7 +1066,7 @@ class AcTran extends BaseAcTran
                 FROM
                   ac_tran
                   INNER JOIN ac_rec_acc
-                    ON ac_rec_acc.id in (credit_rec_acc_id,debit_rec_acc_id)
+                    ON ac_rec_acc.id = debit_rec_acc_id
                   '.implode(PHP_EOL, $join).'
                 WHERE
                     ac_rec_acc.account_id = :account_id
