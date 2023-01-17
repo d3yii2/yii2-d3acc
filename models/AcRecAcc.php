@@ -2,7 +2,8 @@
 
 namespace d3acc\models;
 
-use \d3acc\models\base\AcRecAcc as BaseAcRecAcc;
+use d3acc\models\base\AcRecAcc as BaseAcRecAcc;
+use Yii;
 use yii\db\Exception;
 
 /**
@@ -49,11 +50,11 @@ class AcRecAcc extends BaseAcRecAcc
         /**
          * create account
          */
-        $db = \Yii::$app->db;
+        $db = Yii::$app->db;
         $transaction = $db->beginTransaction();
         $label = [$acc->name];
         if($ref){
-            $tableModels = \Yii::$app->getModule('d3acc')->tableModels;
+            $tableModels = Yii::$app->getModule('d3acc')->tableModels;
 
             foreach($ref as $tableName => $pkValue){
                 if(!isset($tableModels[$tableName])){
@@ -103,7 +104,7 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $accId
      * @param int $sysCompanyId
      * @param array $ref
-     * @return array
+     * @return self[]
      */
     public static function filterAcc(int $accId,int $sysCompanyId, $ref)
     {
