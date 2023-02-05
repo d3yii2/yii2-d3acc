@@ -5,6 +5,7 @@ namespace d3acc\components;
 use d3acc\models\AcDim;
 use d3acc\models\AcTranDim;
 use d3acc\models\AcTran;
+use d3system\exceptions\D3ActiveRecordException;
 use Exception;
 
 class Dim{
@@ -89,7 +90,8 @@ class Dim{
     /**
      * @throws Exception
      */
-    public function save(){
+    public function save()
+    {
         $dimAmt = 0;
         $dimGroup = false;
 
@@ -119,8 +121,9 @@ class Dim{
         /** @var AcTranDim $tran_dim */
         foreach ($this->acc_tran_dims as $tran_dim)
         {
-            $tran_dim->save();
+            if (!$tran_dim->save()) {
+                throw new D3ActiveRecordException($tran_dim);
+            }
         }
     }
-
 }
