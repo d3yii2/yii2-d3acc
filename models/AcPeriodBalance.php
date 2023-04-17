@@ -3,10 +3,9 @@
 namespace d3acc\models;
 
 use Yii;
-use \d3acc\models\base\AcPeriodBalance as BaseAcPeriodBalance;
+use d3acc\models\base\AcPeriodBalance as BaseAcPeriodBalance;
 use yii\db\DataReader;
 use yii\db\Exception;
-use yii\helpers\ArrayHelper;
 
 /**
  * This is the model class for table "ac_period_balance".
@@ -79,27 +78,31 @@ class AcPeriodBalance extends BaseAcPeriodBalance
      */
     public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period)
     {
-        $connection = Yii::$app->getDb();
+        return self::accPeriodBalanceById($acc->id,$period->id);
+    }
 
-        $command = $connection->createCommand('
-            SELECT
-               amount
-            FROM
-              ac_period_balance
-            WHERE
-                period_id = :period_id
-                AND  rec_acc_id = :acc_id
-          ',
-            [
-            ':acc_id' => $acc->id,
-            ':period_id' => $period->prev_period,
-        ]);
-
-
-        if (!$amount = $command->queryScalar()) {
+    public static function accPeriodBalanceById(int $accId, int $periodId)
+    {
+        $amount = Yii::$app
+                ->getDb()
+                ->createCommand('
+                    SELECT
+                       amount
+                    FROM
+                      ac_period_balance
+                    WHERE
+                        period_id = :period_id
+                        AND  rec_acc_id = :acc_id
+                  ',
+                    [
+                    ':acc_id' => $accId,
+                    ':period_id' => $periodId,
+                    ]
+                )
+                ->queryScalar();
+        if (!$amount) {
             return 0;
         }
-
         return $amount;
     }
 
@@ -145,7 +148,6 @@ class AcPeriodBalance extends BaseAcPeriodBalance
             ':account_id' => $accountId,
             ':sysCompanyId' => $period->sys_company_id
         ]);
-
         return $command->queryAll();
     }
 }
