@@ -78,7 +78,7 @@ class AcPeriodBalance extends BaseAcPeriodBalance
      */
     public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period)
     {
-        return self::accPeriodBalanceById($acc->id,$period->id);
+        return self::accPeriodBalanceById($acc->id,$period->prev_period);
     }
 
     public static function accPeriodBalanceById(int $accId, int $periodId)
