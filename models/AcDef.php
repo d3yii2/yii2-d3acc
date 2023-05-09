@@ -3,7 +3,7 @@
 namespace d3acc\models;
 
 use d3acc\dictionaries\AcDefDictionary;
-use \d3acc\models\base\AcDef as BaseAcDef;
+use d3acc\models\base\AcDef as BaseAcDef;
 
 
 /**

@@ -81,8 +81,11 @@ class AcPeriodBalance extends BaseAcPeriodBalance
         return self::accPeriodBalanceById($acc->id,$period->prev_period);
     }
 
-    public static function accPeriodBalanceById(int $accId, int $periodId)
+    public static function accPeriodBalanceById(int $accId, ?int $periodId)
     {
+        if (!$periodId) {
+            return 0;
+        }
         $amount = Yii::$app
                 ->getDb()
                 ->createCommand('

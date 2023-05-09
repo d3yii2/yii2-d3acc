@@ -5,6 +5,7 @@ namespace d3acc\models;
 use d3acc\models\base\AcRecAcc as BaseAcRecAcc;
 use Yii;
 use yii\db\Exception;
+use yii\helpers\VarDumper;
 
 /**
  * This is the model class for table "ac_rec_acc".
@@ -16,11 +17,15 @@ class AcRecAcc extends BaseAcRecAcc
      * get record accounts
      * @param int $accId
      * @param int $sysCompanyId
-     * @param bool $ref
+     * @param array|null $ref
      * @return AcRecAcc
      * @throws Exception
      */
-    public static function getAcc(int $accId, int $sysCompanyId, $ref = false)
+    public static function getAcc(
+        int $accId,
+        int $sysCompanyId,
+        array $ref = null
+    )
     {
         $acc = AcAccount::getValidatedAcc($accId,  $ref);
 
@@ -32,15 +37,31 @@ class AcRecAcc extends BaseAcRecAcc
             'ac_rec_acc.sys_company_id' => $sysCompanyId
         ]);
         if ($ref) {
+            $i = 0;
             foreach ($acc->getAcDefs()->all() as $acDef) {
-                $tableAsName = '`r'.$acDef->table.'`';
+                $i ++;
+                $tableAsName = '`r' . $i . '_' . $acDef->table.'`';
+
+                /** REF name can be table name or code */
+                if ($acDef->code) {
+                    $pkValue = $ref[$acDef->code]??$ref[$acDef->table]??null;
+                } else {
+                    $pkValue = $ref[$acDef->table]??null;
+                }
+                if (!$pkValue) {
+                    throw new \yii\base\Exception('Missing ref parameter for def '
+                        . VarDumper::dumpAsString($acDef->attributes)
+                        . ' for account creation. Ref: '
+                        . VarDumper::dumpAsString($ref)
+                    );
+                }
                 $findRecRef->join('INNER JOIN', '`ac_rec_ref` as '.$tableAsName,
-                    '`ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`');
-                $findRecRef->andWhere(
-                    [
+                    '`ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`')
+                    ->andWhere([
                         $tableAsName.'.`def_id`' => $acDef->id,
-                        $tableAsName.'.`pk_value`' => $ref[$acDef->table],
-                ]);
+                        $tableAsName.'.`pk_value`' => $pkValue,
+                    ]
+                    );
             }
         }
         if ($model = $findRecRef->one()) {
@@ -85,7 +106,7 @@ class AcRecAcc extends BaseAcRecAcc
                 $modelRecRef->sys_company_id = $sysCompanyId;
                 $modelRecRef->def_id         = $acDef->id;
                 $modelRecRef->rec_account_id = $model->id;
-                $modelRecRef->pk_value       = $ref[$acDef->table];
+                $modelRecRef->pk_value       = $ref[$acDef->code]??$ref[$acDef->table];
                 if(!$modelRecRef->save()){
                     $transaction->rolback();
                     throw new \Exception('Error: ' .json_encode($modelRecRef->getErrors()));

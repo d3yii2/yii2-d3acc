@@ -33,15 +33,20 @@ class AcAccount extends BaseAcAccount
 
         if ($def = $model->getAcDefs()->all()) {
             foreach ($def as $defRecord) {
-                if (!isset($ref[$defRecord->table])) {
-                    throw new Exception('Ilegal definition for accId=' . $accId . ' ref=' . json_encode($ref));
+                if (isset($ref[$defRecord->code])) {
+                    unset($ref[$defRecord->code]);
+                    continue;
                 }
-                unset($ref[$defRecord->table]);
+                if (isset($ref[$defRecord->table])) {
+                    unset($ref[$defRecord->table]);
+                    continue;
+                }
+                throw new Exception('Illegal definition for accId=' . $accId . ' ref=' . json_encode($ref));
             }
         }
 
-        if (count($ref) != 0) {
-            throw new Exception('Ilegal definition for accId=' . $accId . ' ref=' . json_encode($ref));
+        if (count($ref) > 0) {
+            throw new Exception('Illegal definition for accId=' . $accId . ' ref=' . json_encode($ref));
         }
         
         return $model;

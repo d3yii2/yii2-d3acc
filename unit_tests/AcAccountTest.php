@@ -2,25 +2,27 @@
 
 namespace utest;
 
+use PHPUnit\Framework\TestCase;
 use yii;
 use d3acc\models\AcAccount;
 use d3acc\models\AcDef;
 use d3acc\models\AcRecAcc;
 use d3acc\models\AcTran;
 use d3acc\models\AcPeriod;
-use d3acc\components\PeriodBase;
 use d3acc\components\PeriodMonth;
 use d3acc\models\AcPeriodBalance;
 
-class AcAccountTest extends \PHPUnit_Framework_TestCase
+class AcAccountTest extends TestCase
 {
-    const PERIOD_TYPE = 7;
+    private const PERIOD_TYPE = 7;
+    private const SYS_COMPANY_ID = 1;
     public $acc;
     public $accD;
+    public $accW;
     public $accDef1;
     public $accDef2;
 
-    public function setUp()
+    public function setUp(): void
     {
 
         if ($accs = AcAccount::findAll(['code' => 'Test'])) {
@@ -30,25 +32,29 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         }
         $this->deletePeriodType(self::PERIOD_TYPE);
 
+        /** set acc component */
+        Yii::$app->acc->userId = 5;
+        Yii::$app->acc->periodType = self::PERIOD_TYPE;
+        Yii::$app->acc->sysCompanyId = self::SYS_COMPANY_ID;
+
         $this->acc       = new AcAccount();
         $this->acc->code = 'Test';
         $this->acc->name = 'Name Test';
         $this->acc->save();
 
         $this->acDef1             = new AcDef();
-        $this->acDef1->sys_company_id = 1;
+        $this->acDef1->sys_company_id = self::SYS_COMPANY_ID;
         $this->acDef1->account_id = $this->acc->id;
         $this->acDef1->table      = 'Test01';
         $this->acDef1->pk_field   = 'id';
         $this->acDef1->save();
 
         $this->acDef2             = new AcDef();
-        $this->acDef2->sys_company_id = 1;
+        $this->acDef2->sys_company_id = self::SYS_COMPANY_ID;
         $this->acDef2->account_id = $this->acc->id;
         $this->acDef2->table      = 'Test02';
         $this->acDef2->pk_field   = 'id';
         $this->acDef2->save();
-
 
         $this->accD       = new AcAccount();
         $this->accD->code = 'Test';
@@ -61,8 +67,27 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $acDef1->pk_field   = 'id';
         $acDef1->save();
 
+        $this->accW       = new AcAccount();
+        $this->accW->code = 'TestW';
+        $this->accW->name = 'Name TestW';
+        $this->accW->save();
+
+        $acwDef1             = new AcDef();
+        $acwDef1->account_id = $this->accW->id;
+        $acwDef1->code      = 'A-Test0W';
+        $acwDef1->table      = 'Test0W';
+        $acwDef1->pk_field   = 'id';
+        $acwDef1->save();
+
+        $acwDef2             = new AcDef();
+        $acwDef2->account_id = $this->accW->id;
+        $acwDef2->code      = 'B-Test0W';
+        $acwDef2->table      = 'Test0W';
+        $acwDef2->pk_field   = 'id';
+        $acwDef2->save();
+
         $period = new AcPeriod();
-        $period->sys_company_id = 1;
+        $period->sys_company_id = self::SYS_COMPANY_ID;
         $period->period_type = self::PERIOD_TYPE;
         $period->status = AcPeriod::STATUS_CLOSED;
         $period->from = '2016-09-01';
@@ -70,7 +95,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $period->save();
 
         $period = new AcPeriod();
-        $period->sys_company_id = 1;
+        $period->sys_company_id = self::SYS_COMPANY_ID;
         $period->period_type = self::PERIOD_TYPE;
         $period->status = AcPeriod::STATUS_ACTIVE;
         $period->from = '2016-10-01';
@@ -81,7 +106,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->deleteAcc($this->acc);
         $this->deleteAcc($this->accD);
@@ -116,7 +141,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
     public function deletePeriodType($type){
         foreach(AcPeriod::find()->where([
             'period_type' => self::PERIOD_TYPE,
-            'sys_company_id' => 1
+            'sys_company_id' => self::SYS_COMPANY_ID
         ])->orderBy(['id'=> SORT_DESC])->all() as $period){
             $period->delete();
         }
@@ -129,36 +154,77 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals($acc->id, $this->acc->id);
     }
 
+    public function testGetValidatedAcccW()
+    {
+        $acc = AcAccount::getValidatedAcc(
+            $this->accW->id,
+                [
+                    'A-Test0W' => 1,
+                    'B-Test0W' => 2
+                ]
+        );
+        $this->assertEquals($acc->id, $this->accW->id);
+    }
+
+    /**
+     * @throws \yii\db\Exception
+     */
     public function testAcRecAccGetValidatedAccc()
     {
         /**
          * get accounts
          */
-        $recAccDebit = AcRecAcc::getAcc($this->acc->id,
-                ['Test01' => 1, 'Test02' => 2]);
+        $recAccDebit = AcRecAcc::getAcc(
+            $this->acc->id,
+            self::SYS_COMPANY_ID,
+            ['Test01' => 1, 'Test02' => 2]
+        );
         $this->assertEquals($recAccDebit->getAccount()->one()->id, $this->acc->id);
 
-        $recAcc2 = AcRecAcc::getAcc($this->acc->id,
-                ['Test01' => 1, 'Test02' => 2]);
+        $recAcc2 = AcRecAcc::getAcc(
+            $this->acc->id,
+            self::SYS_COMPANY_ID,
+            ['Test01' => 1, 'Test02' => 2]
+        );
         $this->assertEquals($recAccDebit->id, $recAcc2->id);
 
-        $recAccCredit = AcRecAcc::getAcc($this->accD->id, ['Test03' => 22]);
-        $this->assertEquals($recAccDebit->id, $recAcc2->id);
+        $recAccCredit = AcRecAcc::getAcc(
+            $this->accD->id,
+            self::SYS_COMPANY_ID,
+            ['Test03' => 22]
+        );
+        $this->assertEquals($recAccCredit->getAccount()->one()->id, $this->accD->id);
+
+        $recAccW = AcRecAcc::getAcc(
+            $this->accW->id,
+            self::SYS_COMPANY_ID,
+            [
+                'A-Test0W' => 1,
+                'B-Test0W' => 2
+            ]
+        );
+        $this->assertEquals($recAccW->getAccount()->one()->id, $this->accW->id);
+
 
         /**
          * get periods
          */
-        $period = AcPeriod::getActivePeriod(1,self::PERIOD_TYPE, '2016-09-02');
+        $period = AcPeriod::getActivePeriod(self::SYS_COMPANY_ID,self::PERIOD_TYPE, '2016-08-02');
         $this->assertTrue(!$period);
 
-        $period = AcPeriod::getActivePeriod(1,self::PERIOD_TYPE, '2016-10-02');
+        $period = AcPeriod::getActivePeriod(self::SYS_COMPANY_ID,self::PERIOD_TYPE, '2016-10-02');
         $this->assertInstanceOf('\d3acc\models\AcPeriod', $period);
 
         /**
          * registre transaction
          */
         $amt = 100;
-        $tran = Yii::$app->acc->regTran($recAccDebit, $recAccCredit, $amt, '2016.10.11');
+        $tran = Yii::$app->acc->regTran(
+            $recAccDebit,
+            $recAccCredit,
+            $amt,
+            '2016.10.11'
+        );
         $this->assertInstanceOf('\d3acc\models\AcTran', $tran);
 
         $debitBalance = AcTran::accPeriodBalance($recAccDebit, $period);
@@ -170,7 +236,11 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         /**
          * validate filtering
          */
-        $recAccList = AcRecAcc::filterAcc($this->acc->id,['Test01' => 1]);
+        $recAccList = AcRecAcc::filterAcc(
+            $this->acc->id,
+            self::SYS_COMPANY_ID,
+            ['Test01' => 1]
+        );
         $this->assertEquals($recAccDebit->id,$recAccList[0]->id);
 
         $data = AcTran::accFilterAccPeriodBalanceByDays($recAccCredit,$recAccDebit,$period);
@@ -208,5 +278,17 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
         $data = AcPeriodBalance::accBalanceFilter($recAccDebit->account_id,$newPeriod, ['Test01' => 1]);
         $this->assertEquals($amt, -$data[0]['amount']);
 
+
+        $amt = 200;
+        $tran = Yii::$app->acc->regTran(
+            $recAccDebit,
+            $recAccW,
+            $amt,
+            '2016.10.12'
+        );
+
+        $this->assertInstanceOf('\d3acc\models\AcTran', $tran);
+        $debitBalance = AcTran::accPeriodBalance($recAccW, $period);
+        $this->assertEquals($amt,$debitBalance);
     }
 }
