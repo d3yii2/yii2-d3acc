@@ -1125,15 +1125,15 @@ class AcTran extends BaseAcTran
         if($addPrevBalance){
             $queryBalance = clone $query;
             $balance += $queryBalance
-                ->select('IFNULL(SUM(IFNULL(b.amount,0)),0)')
+                ->select(['bslsnce' =>'IFNULL(SUM(IFNULL(b.amount,0)),0)'])
                 ->innerJoin(
                     'ac_period_balance b',
                     'ac_rec_acc.id = b.rec_acc_id'
                 )
                 ->andWhere([
                     'ac_rec_acc.account_id' => $accountId,
-                    'ac_tran.period_id' => $period->id,
-                    'ac_tran.sys_company_id' => $period->sys_company_id
+                    'b.period_id' => $period->prev_period,
+                    'b.sys_company_id' => $period->sys_company_id
                 ])
                 ->scalar();
         }
