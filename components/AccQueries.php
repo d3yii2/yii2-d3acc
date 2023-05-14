@@ -38,7 +38,7 @@ class AccQueries
                 } else {
                     $pkValue = $ref[$acDef->table] ?? null;
                 }
-                if ($pkValue === null) {
+                if ($pkValue === null && !$addSelectPkValue && !$groupByPkValue) {
                     continue;
                 }
             }
