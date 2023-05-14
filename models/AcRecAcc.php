@@ -2,8 +2,10 @@
 
 namespace d3acc\models;
 
+use d3acc\components\AccQueries;
 use d3acc\models\base\AcRecAcc as BaseAcRecAcc;
 use Yii;
+use yii\base\ErrorException;
 use yii\db\Exception;
 use yii\helpers\VarDumper;
 
@@ -20,6 +22,8 @@ class AcRecAcc extends BaseAcRecAcc
      * @param array|null $ref
      * @return AcRecAcc
      * @throws Exception
+     * @throws \yii\base\ErrorException|\yii\base\Exception
+     * @throws \Exception
      */
     public static function getAcc(
         int $accId,
@@ -36,9 +40,14 @@ class AcRecAcc extends BaseAcRecAcc
             'account_id' => $accId,
             'ac_rec_acc.sys_company_id' => $sysCompanyId
         ]);
+        $labelRef = [];
         if ($ref) {
             $i = 0;
-            foreach ($acc->getAcDefs()->all() as $acDef) {
+            foreach ($acc
+                         ->getAcDefs()
+                         ->orderBy(['id'=>SORT_ASC])
+                         ->all() as $acDef
+            ) {
                 $i ++;
                 $tableAsName = '`r' . $i . '_' . $acDef->table.'`';
 
@@ -48,6 +57,10 @@ class AcRecAcc extends BaseAcRecAcc
                 } else {
                     $pkValue = $ref[$acDef->table]??null;
                 }
+                $labelRef[] = [
+                    'table' => $acDef->table,
+                    'pkValue' => $pkValue
+                ];
                 if (!$pkValue) {
                     throw new \yii\base\Exception('Missing ref parameter for def '
                         . VarDumper::dumpAsString($acDef->attributes)
@@ -72,22 +85,32 @@ class AcRecAcc extends BaseAcRecAcc
          * create account
          */
         $db = Yii::$app->db;
-        $transaction = $db->beginTransaction();
+        if (!$transaction = Yii::$app->db->beginTransaction()) {
+            throw new ErrorException('Can not initiate tran');
+        }
+
         $label = [$acc->name];
-        if($ref){
+        if($labelRef){
             $tableModels = Yii::$app->getModule('d3acc')->tableModels;
 
-            foreach($ref as $tableName => $pkValue){
+            foreach($labelRef as $labelRefData){
+                $tableName = $labelRefData['table'];
+                $pkValue = $labelRefData['pkValue'];
                 if(!isset($tableModels[$tableName])){
                     $label[] = $tableName . '=' . $pkValue;
                     continue;
                 }
                 $tm = $tableModels[$tableName];
-                if(!method_exists($tm,'itemLabel')){
-                    $label[] = $tableName . '=' . $pkValue;
+                if(method_exists($tm,'accItemLabel')){
+                    $label[] = $tm::findOne($pkValue)->accItemLabel();
                     continue;
                 }
-                $label[] = $tm::findOne($pkValue)->itemLabel();
+                if(method_exists($tm,'itemLabel')){
+                    $label[] = $tm::findOne($pkValue)->itemLabel();
+                    continue;
+                }
+                $label[] = $tableName . '=' . $pkValue;
+
             }
         }
 
@@ -96,7 +119,7 @@ class AcRecAcc extends BaseAcRecAcc
         $model->account_id = $accId;
         $model->label      = implode(', ', $label);
         if(!$model->save()){
-            $transaction->rolback();
+            $transaction->rollBack();
             throw new \Exception('Error: ' .json_encode($model->getErrors()));
         }
 
@@ -126,34 +149,12 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $sysCompanyId
      * @param array $ref
      * @return self[]
+     * @deprecated use AccQueries::joinRefs()->all()
      */
-    public static function filterAcc(int $accId,int $sysCompanyId, $ref)
+    public static function filterAcc(int $accId, int $sysCompanyId, $ref): array
     {
-        $acc = AcAccount::findOne($accId);
+        return AccQueries::joinRefs($accId, $sysCompanyId, $ref)->all();
 
-        /**
-         * search account
-         */
-        $findRecRef = self::find()->where([
-            'account_id' => $accId,
-            'ac_rec_acc.sys_company_id' => $sysCompanyId
-        ]);
-
-        foreach ($acc->getAcDefs()->all() as $acDef) {
-            if(!isset($ref[$acDef->table])){
-                continue;
-            }
-            $tableAsName = '`r'.$acDef->table.'`';
-            $findRecRef->join('INNER JOIN', '`ac_rec_ref` as '.$tableAsName,
-                '`ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`');
-            $findRecRef->andWhere(
-                [
-                    $tableAsName.'.`def_id`' => $acDef->id,
-                    $tableAsName.'.`pk_value`' => $ref[$acDef->table],
-            ]);
-        }
-
-        return $findRecRef->all();
     }
 
     /**
