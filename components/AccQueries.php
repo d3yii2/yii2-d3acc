@@ -5,16 +5,20 @@ namespace d3acc\components;
 use d3acc\models\AcAccount;
 use d3acc\models\AcRecAcc;
 use yii\base\Exception;
+use yii\db\ActiveQuery;
 
 class AccQueries
 {
+    /**
+     * @throws \yii\base\Exception
+     */
     public static function joinRefs(
         int   $accId,
         int   $sysCompanyId,
         array $ref = [],
         bool  $addSelectPkValue = false,
         bool  $groupByPkValue = false
-    )
+    ): ActiveQuery
     {
         if (!$acc = AcAccount::findOne($accId)) {
             throw new Exception('Illegal $accId: ' . $accId);
@@ -29,7 +33,13 @@ class AccQueries
                 'ac_rec_acc.account_id' => $accId,
                 'ac_rec_acc.sys_company_id' => $sysCompanyId
             ]);
+        if (isset($ref['id'])) {
+            $findRecRef->andWhere([
+                'ac_rec_acc.id' => $ref['id']
+            ]);
+        }
         $i = 0;
+        /** @var \d3acc\models\AcDef $acDef */
         foreach ($acc->getAcDefs()->orderBy(['id' => SORT_ASC])->all() as $acDef) {
             $pkValue = null;
             if ($ref) {
