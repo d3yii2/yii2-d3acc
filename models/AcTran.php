@@ -92,15 +92,28 @@ class AcTran extends BaseAcTran
     }
 
     /**
-     * get account balance for period
+     * get rec account balance for period
      *
      * @param AcPeriod $period
      * @param bool $addPrevBalance
+     * @param array $acRecAccIds
      * @return array
-     * @throws \yii\db\Exception
      */
-    public static function periodBalance(AcPeriod $period, $addPrevBalance = true)
+    public static function periodBalance(
+        AcPeriod $period,
+        $addPrevBalance = true,
+        array $acRecAccIds = []
+    )
     {
+        $addDebitWhere = '';
+        $addCreditWhere = '';
+        $addBalanceWhere = '';
+        if ($acRecAccIds) {
+            $addDebitWhere = ' AND debit_rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
+            $addCreditWhere = ' AND credit_rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
+            $addBalanceWhere = ' AND rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
+        }
+
         $unionPrevBalanceSql = '';
         if($addPrevBalance){
             $unionPrevBalanceSql = '
@@ -111,6 +124,7 @@ class AcTran extends BaseAcTran
                   FROM
                     ac_period_balance
                   WHERE period_id = :prev_period_id
+                  ' . $addBalanceWhere . '
                   ';
         }
         $connection = Yii::$app->getDb();
@@ -128,6 +142,7 @@ class AcTran extends BaseAcTran
                     ac_tran
                   WHERE period_id = :period_id
                     AND ac_tran.sys_company_id = :sysCompanyId
+                    ' . $addDebitWhere . '
                   GROUP BY debit_rec_acc_id
                   UNION
                   SELECT
@@ -137,6 +152,7 @@ class AcTran extends BaseAcTran
                     ac_tran
                   WHERE period_id = :period_id
                     AND ac_tran.sys_company_id = :sysCompanyId
+                    ' . $addCreditWhere . '
                   GROUP BY credit_rec_acc_id
                   '.$unionPrevBalanceSql.'
                   ) a
