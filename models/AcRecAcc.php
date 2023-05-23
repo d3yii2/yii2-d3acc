@@ -4,6 +4,7 @@ namespace d3acc\models;
 
 use d3acc\components\AccQueries;
 use d3acc\models\base\AcRecAcc as BaseAcRecAcc;
+use d3system\exceptions\D3ActiveRecordException;
 use Yii;
 use yii\base\ErrorException;
 use yii\db\Exception;
@@ -48,19 +49,21 @@ class AcRecAcc extends BaseAcRecAcc
                          ->orderBy(['id'=>SORT_ASC])
                          ->all() as $acDef
             ) {
-                $i ++;
-                $tableAsName = '`r' . $i . '_' . $acDef->table.'`';
-
                 /** REF name can be table name or code */
+                $pkValue = null;
                 if ($acDef->code) {
-                    $pkValue = $ref[$acDef->code]??$ref[$acDef->table]??null;
+                    if (isset($ref[$acDef->code])) {
+                        $pkValue = $ref[$acDef->code];
+                        $refKey = $acDef->code;
+                    } elseif (isset($ref[$acDef->table])) {
+                        $pkValue = $ref[$acDef->table];
+                        $refKey = $acDef->table;
+                    }
                 } else {
                     $pkValue = $ref[$acDef->table]??null;
+                    $refKey = $acDef->table;
                 }
-                $labelRef[] = [
-                    'table' => $acDef->table,
-                    'pkValue' => $pkValue
-                ];
+
                 if (!$pkValue) {
                     throw new \yii\base\Exception('Missing ref parameter for def '
                         . VarDumper::dumpAsString($acDef->attributes)
@@ -68,13 +71,38 @@ class AcRecAcc extends BaseAcRecAcc
                         . VarDumper::dumpAsString($ref)
                     );
                 }
-                $findRecRef->join('INNER JOIN', '`ac_rec_ref` as '.$tableAsName,
-                    '`ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`')
+
+                $labelRef[] = [
+                    'table' => $acDef->table,
+                    'pkValue' => $pkValue,
+                    'use_in_label' => $acDef->use_in_label
+                ];
+
+                /** join table */
+                $i ++;
+                $tableAsName = '`r' . $i . '_' . $acDef->table .'`';
+
+                /** if used AcRecTable, get id  */
+                if ($acDef->table === AcRecTable::tableName()) {
+                    if (!$recTable = AcRecTable::findOne(['name' => $pkValue])) {
+                        $recTable = new AcRecTable();
+                        $recTable->name = $pkValue;
+                        if (!$recTable->save()) {
+                            throw new D3ActiveRecordException($recTable);
+                        }
+                    }
+                    $pkValue = $recTable->id;
+                    $ref[$refKey] = $pkValue;
+                }
+                $findRecRef
+                    ->join(
+                        'INNER JOIN', '`ac_rec_ref` as '.$tableAsName,
+                        '`ac_rec_acc`.`id` = '.$tableAsName.'.`rec_account_id`'
+                    )
                     ->andWhere([
                         $tableAsName.'.`def_id`' => $acDef->id,
                         $tableAsName.'.`pk_value`' => $pkValue,
-                    ]
-                    );
+                    ]);
             }
         }
         if ($model = $findRecRef->one()) {
@@ -89,11 +117,14 @@ class AcRecAcc extends BaseAcRecAcc
             throw new ErrorException('Can not initiate tran');
         }
 
-        $label = [$acc->name];
+        $label = [];
         if($labelRef){
             $tableModels = Yii::$app->getModule('d3acc')->tableModels;
 
             foreach($labelRef as $labelRefData){
+                if (!$labelRefData['use_in_label']) {
+                    continue;
+                }
                 $tableName = $labelRefData['table'];
                 $pkValue = $labelRefData['pkValue'];
                 if(!isset($tableModels[$tableName])){
@@ -110,7 +141,6 @@ class AcRecAcc extends BaseAcRecAcc
                     continue;
                 }
                 $label[] = $tableName . '=' . $pkValue;
-
             }
         }
 
@@ -131,7 +161,7 @@ class AcRecAcc extends BaseAcRecAcc
                 $modelRecRef->rec_account_id = $model->id;
                 $modelRecRef->pk_value       = $ref[$acDef->code]??$ref[$acDef->table];
                 if(!$modelRecRef->save()){
-                    $transaction->rolback();
+                    $transaction->rollBack();
                     throw new \Exception('Error: ' .json_encode($modelRecRef->getErrors()));
 
                 }

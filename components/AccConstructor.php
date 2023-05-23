@@ -4,6 +4,7 @@
  */
 namespace d3acc\components;
 
+use d3acc\models\AcRecTable;
 use d3acc\Module;
 use Exception;
 use Throwable;
@@ -62,13 +63,39 @@ class AccConstructor
      * @return AcDef created model
      * @throws \yii\base\Exception
      */
-    public function addAccDef(string $table, string $pkField = 'id', string $code = ''): AcDef
+    public function addAccDef(
+        string $table,
+        string $pkField = 'id',
+        string $code = '',
+        int $useInLabel = 1
+    ): AcDef
     {
         $model = new AcDef();
         $model->sys_company_id = $this->sysCompanyId;
         $model->account_id = $this->account->id;
         $model->table = $table;
         $model->pk_field = $pkField;
+        $model->use_in_label = $useInLabel;
+        if($code){
+            $model->code = $code;
+        }
+        if (!$model->save()) {
+            throw new \yii\base\Exception('Can not create AcDef: '.json_encode($model->getErrors()));
+        }
+        return $model;
+    }
+
+    public function addAccDefRecTable(
+        string $code = '',
+        int $useInLabel = 1
+    ): AcDef
+    {
+        $model = new AcDef();
+        $model->sys_company_id = $this->sysCompanyId;
+        $model->account_id = $this->account->id;
+        $model->table = AcRecTable::tableName();
+        $model->pk_field = 'id';
+        $model->use_in_label = $useInLabel;
         if($code){
             $model->code = $code;
         }

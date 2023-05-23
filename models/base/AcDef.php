@@ -5,7 +5,7 @@
 namespace d3acc\models\base;
 
 use Yii;
-
+use yii\db\ActiveRecord;
 
 /**
  * This is the base-model class for table "ac_def".
@@ -16,12 +16,13 @@ use Yii;
  * @property integer $account_id
  * @property string $table
  * @property string $pk_field
+ * @property integer $use_in_label
  *
  * @property \d3acc\models\AcRecRef[] $acRecRefs
  * @property \d3acc\models\AcAccount $account
  * @property string $aliasModel
  */
-abstract class AcDef extends \yii\db\ActiveRecord
+abstract class AcDef extends ActiveRecord
 {
 
 
@@ -41,10 +42,11 @@ abstract class AcDef extends \yii\db\ActiveRecord
     {
         return [
             'required' => [['account_id'], 'required'],
+            'tinyint Unsigned' => [['use_in_label'],'integer' ,'min' => 0 ,'max' => 255],
             'smallint Unsigned' => [['id','sys_company_id','account_id'],'integer' ,'min' => 0 ,'max' => 65535],
             [['code'], 'string', 'max' => 20],
             [['table', 'pk_field'], 'string', 'max' => 100],
-            [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::className(), 'targetAttribute' => ['account_id' => 'id']]
+            [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::class, 'targetAttribute' => ['account_id' => 'id']]
         ];
     }
 
@@ -60,6 +62,7 @@ abstract class AcDef extends \yii\db\ActiveRecord
             'account_id' => Yii::t('d3acc', 'Account'),
             'table' => Yii::t('d3acc', 'Table'),
             'pk_field' => Yii::t('d3acc', 'Primary key field'),
+            'use_in_label' => Yii::t('d3acc', 'Use In Label'),
         ];
     }
 
@@ -78,19 +81,18 @@ abstract class AcDef extends \yii\db\ActiveRecord
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getAccount()
+    public function getAcRecRefs()
     {
-        return $this->hasOne(\d3acc\models\AcAccount::className(), ['id' => 'account_id'])->inverseOf('acDefs');
+        return $this->hasMany(\d3acc\models\AcRecRef::class, ['def_id' => 'id'])->inverseOf('def');
     }
 
     /**
      * @return \yii\db\ActiveQuery
      */
-    public function getAcRecRefs()
+    public function getAccount()
     {
-        return $this->hasMany(\d3acc\models\AcRecRef::className(), ['def_id' => 'id'])->inverseOf('def');
+        return $this->hasOne(\d3acc\models\AcAccount::class, ['id' => 'account_id'])->inverseOf('acDefs');
     }
-
 
 
 

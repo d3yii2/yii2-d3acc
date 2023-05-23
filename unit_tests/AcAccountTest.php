@@ -2,6 +2,7 @@
 
 namespace utest;
 
+use d3acc\models\AcRecTable;
 use PHPUnit\Framework\TestCase;
 use yii;
 use d3acc\models\AcAccount;
@@ -16,6 +17,11 @@ class AcAccountTest extends TestCase
 {
     private const PERIOD_TYPE = 7;
     private const SYS_COMPANY_ID = 1;
+    const ACC_1_REF = [
+        'Test01' => 1,
+        'Test02' => 2,
+        'ac_rec_table' => 'BimBim'
+    ];
     public $acc;
     public $accD;
     public $accW;
@@ -53,6 +59,13 @@ class AcAccountTest extends TestCase
         $this->acDef2->sys_company_id = self::SYS_COMPANY_ID;
         $this->acDef2->account_id = $this->acc->id;
         $this->acDef2->table      = 'Test02';
+        $this->acDef2->pk_field   = 'id';
+        $this->acDef2->save();
+
+        $this->acDef2             = new AcDef();
+        $this->acDef2->sys_company_id = self::SYS_COMPANY_ID;
+        $this->acDef2->account_id = $this->acc->id;
+        $this->acDef2->table      = AcRecTable::tableName();
         $this->acDef2->pk_field   = 'id';
         $this->acDef2->save();
 
@@ -150,7 +163,7 @@ class AcAccountTest extends TestCase
     public function testGetValidatedAccc()
     {
         $acc = AcAccount::getValidatedAcc($this->acc->id,
-                ['Test01' => 1, 'Test02' => 2]);
+            self::ACC_1_REF);
         $this->assertEquals($acc->id, $this->acc->id);
     }
 
@@ -177,14 +190,14 @@ class AcAccountTest extends TestCase
         $recAccDebit = AcRecAcc::getAcc(
             $this->acc->id,
             self::SYS_COMPANY_ID,
-            ['Test01' => 1, 'Test02' => 2]
+            self::ACC_1_REF
         );
         $this->assertEquals($recAccDebit->getAccount()->one()->id, $this->acc->id);
 
         $recAcc2 = AcRecAcc::getAcc(
             $this->acc->id,
             self::SYS_COMPANY_ID,
-            ['Test01' => 1, 'Test02' => 2]
+            self::ACC_1_REF
         );
         $this->assertEquals($recAccDebit->id, $recAcc2->id);
 
