@@ -127,6 +127,12 @@ class AcRecAcc extends BaseAcRecAcc
                 }
                 $tableName = $labelRefData['table'];
                 $pkValue = $labelRefData['pkValue'];
+
+                /** for AcRecTable to label add only value */
+                if ($tableName === AcRecTable::tableName()) {
+                    $label[] = $pkValue;
+                    continue;
+                }
                 if(!isset($tableModels[$tableName])){
                     $label[] = $tableName . '=' . $pkValue;
                     continue;
