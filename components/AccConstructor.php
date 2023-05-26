@@ -249,4 +249,26 @@ class AccConstructor
         }
 
     }
+
+    public function deleteRecAcc(int $recAccId)
+    {
+        /** @var AcRecAcc $recAcc */
+        if (!$recAcc = AcRecAcc::findOne($recAccId)) {
+            throw new \yii\db\Exception('Can not find AcRecAcc');
+        }
+        if ($recAcc->sys_company_id !== $this->sysCompanyId) {
+            throw new \yii\db\Exception('Mismatch syscompany');
+        }
+        if ($recAcc->acTrans) {
+            throw new \yii\db\Exception('Can not delete! Used in transactions debit');
+        }
+        if ($recAcc->acTrans0) {
+            throw new \yii\db\Exception('Can not delete! Used in transactions debit');
+        }
+
+        foreach ($recAcc->acRecRefs as $ref) {
+            $ref->delete();
+        }
+        $recAcc->delete();
+    }
 }
