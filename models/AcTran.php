@@ -35,7 +35,7 @@ class AcTran extends BaseAcTran
      * @param string $code
      * @return AcTran
      * @throws D3ActiveRecordException
-     * @throws \Exception
+     * @throws Exception
      */
     public static function registre2(
         AcRecAcc $debitAcc,
@@ -176,17 +176,20 @@ class AcTran extends BaseAcTran
      *
      * @param AcPeriod $period
      * @param array $acRecAccIds
+     * @param bool $addToSelectTranIds add column transIds with all ac_tran.id separated by comma
      * @return array {
      *     rec_acc_id: string,
      *     label: string,
      *     account_id: string,
      *     amount: string,
-     *     total_amount: float
+     *     total_amount: float,
+     *     tranIds: CSV
      * }
      */
     public static function periodBalanceTotal(
         AcPeriod $period,
-        array $acRecAccIds = []
+        array $acRecAccIds = [],
+        bool $addToSelectTranIds = false
     ): array
     {
         $connection = Yii::$app->getDb();
@@ -198,6 +201,12 @@ class AcTran extends BaseAcTran
             $addCreditWhere = ' AND credit_rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
             $addBalanceWhere = ' AND ra.account_id IN (' . implode(',',$acRecAccIds) . ') ';
         }
+        $selectDebitCreditTranIds = '';
+        $mainSelectIds = '';
+        if ($addToSelectTranIds) {
+            $selectDebitCreditTranIds = ',GROUP_CONCAT(ac_tran.id SEPARATOR ",") AS tranIds';
+            $mainSelectIds = ',GROUP_CONCAT(tranIds SEPARATOR ",") AS tranIds';
+        }
 
         $command    = $connection->createCommand('
                 SELECT
@@ -206,10 +215,12 @@ class AcTran extends BaseAcTran
                   ra.account_id,
                   SUM(amount) amount,
                   0 total_amount
+                  ' . $mainSelectIds . '
                 FROM
                   (SELECT
                     debit_rec_acc_id rec_acc_id,
                     - IFNULL(SUM(amount), 0) amount
+                    '.$selectDebitCreditTranIds.'
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
@@ -220,6 +231,7 @@ class AcTran extends BaseAcTran
                   SELECT
                     credit_rec_acc_id rec_acc_id,
                     IFNULL(SUM(amount), 0) amount
+                    '.$selectDebitCreditTranIds.'                    
                   FROM
                     ac_tran
                   WHERE period_id = :period_id
@@ -238,8 +250,11 @@ class AcTran extends BaseAcTran
             ':period_id' => $period->id,
             ':sysCompanyId' => $period->sys_company_id
         ]);
-        $tranData = $command->queryAll();
-        $tranData = ArrayHelper::index($tranData, 'account_id');
+
+        $tranData = ArrayHelper::index(
+            $command->queryAll(),
+            'account_id'
+        );
 
         $command    = $connection->createCommand('
             SELECT
@@ -262,8 +277,11 @@ class AcTran extends BaseAcTran
             [
             ':prev_period_id' => $period->prev_period,
         ]);
-        $balanceData = $command->queryAll();
-        $balanceData = ArrayHelper::index($balanceData, 'account_id');
+
+        $balanceData = ArrayHelper::index(
+            $command->queryAll(),
+            'account_id'
+        );
 
         foreach($tranData as $accId => $dRow){
             $prevBalance = 0;
@@ -280,7 +298,6 @@ class AcTran extends BaseAcTran
                 $tranData[$accId]['amount'] = 0;
             }
         }
-        //dump($tranData);die();
         return $tranData;
     }
 
@@ -735,7 +752,7 @@ class AcTran extends BaseAcTran
      * @param bool $addPrevToFirstDay
      * @return array
      * @throws \yii\db\Exception
-     * @throws \Exception
+     * @throws Exception
      */
     public static function accPeriodBalanceByDays(AcRecAcc $acc, AcPeriod $period, $addPrevToFirstDay = true)
     {
