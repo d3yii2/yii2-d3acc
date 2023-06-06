@@ -16,11 +16,12 @@ class AcDefDictionary{
     {
         return Yii::$app->cache->getOrSet(
             self::createKey($sysCompanyId),
-            static function () use($sysCompanyId) {                return ArrayHelper::map(
-                    AcDef::find()
+            static function () use($sysCompanyId) {
+                $acDefs = AcDef::find()
                     ->select([
                         'id' => 'id',
-                        'name' => 'code',
+                        'account_id',
+                        'code',
                     ])
                     ->where(['sys_company_id' => $sysCompanyId])
                     ->andWhere('NOT code IS NULL')
@@ -28,17 +29,22 @@ class AcDefDictionary{
                         'code' => SORT_ASC,
                     ])
                     ->asArray()
-                    ->all()
-                ,
-                'id',
-                'name'
-                );
+                    ->all();
+                $list = [];
+                foreach ($acDefs as $acDef) {
+                    $list[$acDef['account_id']][$acDef['code']] = $acDef['id'];
+                }
+                return $list;
             }
         );
     }
-    public static function getIdByCode(int $sysCompanyId,string $code)
+    public static function getIdByCode(
+        int $sysCompanyId,
+        int $accId,
+        string $code
+    )
     {
-        return array_flip(self::getCodeList($sysCompanyId))[$code]??false;
+        return self::getCodeList($sysCompanyId)[$accId][$code]??false;
     }
 
     public static function clearCache(): void
