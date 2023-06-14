@@ -23,13 +23,14 @@ class AcRecAcc extends BaseAcRecAcc
      * @param array|null $ref
      * @return AcRecAcc
      * @throws Exception
-     * @throws \yii\base\ErrorException|\yii\base\Exception
+     * @throws ErrorException|\yii\base\Exception
      * @throws \Exception
      */
     public static function getAcc(
         int $accId,
         int $sysCompanyId,
-        array $ref = null
+        array $ref = null,
+        int $currencyId
     )
     {
         $acc = AcAccount::getValidatedAcc($accId,  $ref);
@@ -39,7 +40,8 @@ class AcRecAcc extends BaseAcRecAcc
          */
         $findRecRef = self::find()->where([
             'account_id' => $accId,
-            'ac_rec_acc.sys_company_id' => $sysCompanyId
+            'ac_rec_acc.sys_company_id' => $sysCompanyId,
+            'ac_rec_acc.currency_id' => $currencyId
         ]);
         $labelRef = [];
         if ($ref) {
@@ -153,6 +155,7 @@ class AcRecAcc extends BaseAcRecAcc
         $model             = new AcRecAcc();
         $model->sys_company_id = $sysCompanyId;
         $model->account_id = $accId;
+        $model->currency_id = $currencyId;
         $model->label      = implode(', ', $label);
         if(!$model->save()){
             $transaction->rollBack();

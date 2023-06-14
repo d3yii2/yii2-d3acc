@@ -5,7 +5,8 @@
 namespace d3acc\models\base;
 
 use Yii;
-
+use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
 
 /**
  * This is the base-model class for table "ac_rec_acc".
@@ -13,6 +14,7 @@ use Yii;
  * @property integer $id
  * @property integer $sys_company_id
  * @property integer $account_id
+ * @property integer $currency_id
  * @property string $label
  *
  * @property \d3acc\models\AcPeriodBalance[] $acPeriodBalances
@@ -22,7 +24,7 @@ use Yii;
  * @property \d3acc\models\AcAccount $account
  * @property string $aliasModel
  */
-abstract class AcRecAcc extends \yii\db\ActiveRecord
+abstract class AcRecAcc extends ActiveRecord
 {
 
 
@@ -35,7 +37,6 @@ abstract class AcRecAcc extends \yii\db\ActiveRecord
         return 'ac_rec_acc';
     }
 
-
     /**
      * @inheritdoc
      */
@@ -43,9 +44,10 @@ abstract class AcRecAcc extends \yii\db\ActiveRecord
     {
         return [
             'required' => [['account_id'], 'required'],
+            'tinyint Unsigned' => [['currency_id'],'integer' ,'min' => 0 ,'max' => 255],
             'smallint Unsigned' => [['id','sys_company_id','account_id'],'integer' ,'min' => 0 ,'max' => 65535],
             [['label'], 'string', 'max' => 100],
-            [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::className(), 'targetAttribute' => ['account_id' => 'id']]
+            [['account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcAccount::class, 'targetAttribute' => ['account_id' => 'id']]
         ];
     }
 
@@ -58,6 +60,7 @@ abstract class AcRecAcc extends \yii\db\ActiveRecord
             'id' => Yii::t('d3acc', 'ID'),
             'sys_company_id' => Yii::t('d3acc', 'Sys Company ID'),
             'account_id' => Yii::t('d3acc', 'Account'),
+            'currency_id' => Yii::t('d3acc', 'Currency'),
             'label' => Yii::t('d3acc', 'Label'),
         ];
     }
@@ -74,45 +77,44 @@ abstract class AcRecAcc extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getAcPeriodBalances()
     {
-        return $this->hasMany(\d3acc\models\AcPeriodBalance::className(), ['rec_acc_id' => 'id'])->inverseOf('recAcc');
+        return $this->hasMany(\d3acc\models\AcPeriodBalance::class, ['rec_acc_id' => 'id'])->inverseOf('recAcc');
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getAcRecRefs()
     {
-        return $this->hasMany(\d3acc\models\AcRecRef::className(), ['rec_account_id' => 'id'])->inverseOf('recAccount');
+        return $this->hasMany(\d3acc\models\AcRecRef::class, ['rec_account_id' => 'id'])->inverseOf('recAccount');
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getAcTrans()
     {
-        return $this->hasMany(\d3acc\models\AcTran::className(), ['debit_rec_acc_id' => 'id'])->inverseOf('debitRecAcc');
+        return $this->hasMany(\d3acc\models\AcTran::class, ['debit_rec_acc_id' => 'id'])->inverseOf('debitRecAcc');
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getAcTrans0()
     {
-        return $this->hasMany(\d3acc\models\AcTran::className(), ['credit_rec_acc_id' => 'id'])->inverseOf('creditRecAcc');
+        return $this->hasMany(\d3acc\models\AcTran::class, ['credit_rec_acc_id' => 'id'])->inverseOf('creditRecAcc');
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
     public function getAccount()
     {
-        return $this->hasOne(\d3acc\models\AcAccount::className(), ['id' => 'account_id'])->inverseOf('acRecAccs');
+        return $this->hasOne(\d3acc\models\AcAccount::class, ['id' => 'account_id'])->inverseOf('acRecAccs');
     }
-
 
 
 

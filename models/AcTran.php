@@ -175,7 +175,7 @@ class AcTran extends BaseAcTran
      * get account balance for period
      *
      * @param AcPeriod $period
-     * @param array $acRecAccIds
+     * @param array $acRecAccIds - use for filtering
      * @param bool $addToSelectTranIds add column transIds with all ac_tran.id separated by comma
      * @return array {
      *     rec_acc_id: string,
