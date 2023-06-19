@@ -199,7 +199,7 @@ class AcTran extends BaseAcTran
         if ($acRecAccIds) {
             $addDebitWhere = ' AND debit_rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
             $addCreditWhere = ' AND credit_rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
-            $addBalanceWhere = ' AND ra.account_id IN (' . implode(',',$acRecAccIds) . ') ';
+            $addBalanceWhere = ' AND b.rec_acc_id IN (' . implode(',',$acRecAccIds) . ') ';
         }
         $selectDebitCreditTranIds = '';
         $mainSelectIds = '';
