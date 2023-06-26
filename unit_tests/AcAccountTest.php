@@ -12,6 +12,7 @@ use d3acc\models\AcTran;
 use d3acc\models\AcPeriod;
 use d3acc\components\PeriodMonth;
 use d3acc\models\AcPeriodBalance;
+use yii\db\Exception;
 
 class AcAccountTest extends TestCase
 {
@@ -180,7 +181,7 @@ class AcAccountTest extends TestCase
     }
 
     /**
-     * @throws \yii\db\Exception
+     * @throws Exception
      */
     public function testAcRecAccGetValidatedAccc()
     {
@@ -190,7 +191,7 @@ class AcAccountTest extends TestCase
         $recAccDebit = AcRecAcc::getAcc(
             $this->acc->id,
             self::SYS_COMPANY_ID,
-            self::ACC_1_REF
+            self::ACC_1_REF,
         );
         $this->assertEquals($recAccDebit->getAccount()->one()->id, $this->acc->id);
 

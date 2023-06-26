@@ -21,17 +21,19 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $accId
      * @param int $sysCompanyId
      * @param array|null $ref
+     * @param int $currencyId
      * @return AcRecAcc
+     * @throws D3ActiveRecordException
+     * @throws ErrorException
      * @throws Exception
-     * @throws ErrorException|\yii\base\Exception
-     * @throws \Exception
+     * @throws \yii\base\Exception
      */
     public static function getAcc(
         int $accId,
         int $sysCompanyId,
-        array $ref = null,
+        array $ref,
         int $currencyId
-    )
+    ): AcRecAcc
     {
         $acc = AcAccount::getValidatedAcc($accId,  $ref);
 
@@ -129,7 +131,10 @@ class AcRecAcc extends BaseAcRecAcc
                 }
                 $tableName = $labelRefData['table'];
                 $pkValue = $labelRefData['pkValue'];
-
+                $len = $labelRefData['use_in_label']??0;
+                if ($len > 1) {
+                    $pkValue =  substr($pkValue,0,$len);
+                }
                 /** for AcRecTable to label add only value */
                 if ($tableName === AcRecTable::tableName()) {
                     $label[] = $pkValue;
@@ -148,7 +153,9 @@ class AcRecAcc extends BaseAcRecAcc
                     $label[] = $tm::findOne($pkValue)->itemLabel();
                     continue;
                 }
+
                 $label[] = $tableName . '=' . $pkValue;
+
             }
         }
 
@@ -156,7 +163,7 @@ class AcRecAcc extends BaseAcRecAcc
         $model->sys_company_id = $sysCompanyId;
         $model->account_id = $accId;
         $model->currency_id = $currencyId;
-        $model->label      = implode(', ', $label);
+        $model->label      = substr(implode(',', $label),0,100);
         if(!$model->save()){
             $transaction->rollBack();
             throw new \Exception('Error: ' .json_encode($model->getErrors()));
