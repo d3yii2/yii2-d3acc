@@ -28,9 +28,11 @@ class AcAccountTest extends TestCase
     public $accW;
     public $accDef1;
     public $accDef2;
+    public $currencyId;
 
     public function setUp(): void
     {
+        $this->currencyId = 1;
 
         if ($accs = AcAccount::findAll(['code' => 'Test'])) {
             foreach ($accs as $acc) {
@@ -192,20 +194,24 @@ class AcAccountTest extends TestCase
             $this->acc->id,
             self::SYS_COMPANY_ID,
             self::ACC_1_REF,
+            $this->currencyId
+
         );
         $this->assertEquals($recAccDebit->getAccount()->one()->id, $this->acc->id);
 
         $recAcc2 = AcRecAcc::getAcc(
             $this->acc->id,
             self::SYS_COMPANY_ID,
-            self::ACC_1_REF
+            self::ACC_1_REF,
+            $this->currencyId
         );
         $this->assertEquals($recAccDebit->id, $recAcc2->id);
 
         $recAccCredit = AcRecAcc::getAcc(
             $this->accD->id,
             self::SYS_COMPANY_ID,
-            ['Test03' => 22]
+            ['Test03' => 22],
+            $this->currencyId
         );
         $this->assertEquals($recAccCredit->getAccount()->one()->id, $this->accD->id);
 
@@ -215,7 +221,8 @@ class AcAccountTest extends TestCase
             [
                 'A-Test0W' => 1,
                 'B-Test0W' => 2
-            ]
+            ],
+            $this->currencyId
         );
         $this->assertEquals($recAccW->getAccount()->one()->id, $this->accW->id);
 

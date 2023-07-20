@@ -22,29 +22,33 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $sysCompanyId
      * @param array|null $ref
      * @param int $currencyId
-     * @return AcRecAcc
+     * @param bool $createIfNoExist
+     * @return AcRecAcc|null
      * @throws D3ActiveRecordException
      * @throws ErrorException
      * @throws Exception
      * @throws \yii\base\Exception
+     * @throws \Exception
      */
     public static function getAcc(
         int $accId,
         int $sysCompanyId,
         array $ref,
-        int $currencyId
-    ): AcRecAcc
+        int $currencyId,
+        bool $createIfNoExist = true
+    ): ?AcRecAcc
     {
         $acc = AcAccount::getValidatedAcc($accId,  $ref);
 
         /**
          * search account
          */
-        $findRecRef = self::find()->where([
-            'account_id' => $accId,
-            'ac_rec_acc.sys_company_id' => $sysCompanyId,
-            'ac_rec_acc.currency_id' => $currencyId
-        ]);
+        $findRecRef = self::find()
+            ->where([
+                'account_id' => $accId,
+                'ac_rec_acc.sys_company_id' => $sysCompanyId,
+                'ac_rec_acc.currency_id' => $currencyId
+            ]);
         $labelRef = [];
         if ($ref) {
             $i = 0;
@@ -113,6 +117,9 @@ class AcRecAcc extends BaseAcRecAcc
             return $model;
         }
 
+        if (!$createIfNoExist) {
+            return null;
+        }
         /**
          * create account
          */
@@ -208,7 +215,7 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $def_id id from table ac_def
      * @return int
      */
-    public function getRefPkValue($def_id){
+    public function getRefPkValue(int $def_id){
         return $this->getAcRecRefs()->select('pk_value')->where(['def_id' => $def_id])->scalar();
     }
 }

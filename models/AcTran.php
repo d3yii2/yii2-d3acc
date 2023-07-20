@@ -12,6 +12,7 @@ use d3system\exceptions\D3ActiveRecordException;
 use Exception;
 use Yii;
 use d3acc\models\base\AcTran as BaseAcTran;
+use yii\db\DataReader;
 use yii\db\Query;
 use yii\helpers\ArrayHelper;
 use yii\db\Expression;
@@ -635,7 +636,7 @@ class AcTran extends BaseAcTran
             $actualBalance += AcPeriodBalance::accPeriodBalance($acc, $period);
         }
 
-        return $actualBalance;
+        return round($actualBalance, 2);
     }
 
 
@@ -812,7 +813,7 @@ class AcTran extends BaseAcTran
      * @param AcRecAcc $acc
      * @param AcRecAcc|array $accFilter
      * @param AcPeriod $period
-     * @return array|\yii\db\DataReader
+     * @return array|DataReader
      * @throws \yii\db\Exception
      */
     public static function accFilterAccPeriodBalanceByDays(AcRecAcc $acc,
