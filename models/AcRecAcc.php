@@ -164,6 +164,9 @@ class AcRecAcc extends BaseAcRecAcc
                 $label[] = $tableName . '=' . $pkValue;
 
             }
+            if ($label === []) {
+                $label[] = $acc->name;
+            }
         }
 
         $model             = new AcRecAcc();
