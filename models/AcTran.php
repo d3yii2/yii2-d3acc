@@ -603,10 +603,17 @@ class AcTran extends BaseAcTran
      * @return false|int|string|null
      * @throws \yii\db\Exception
      */
-    public static function accPeriodBalance(AcRecAcc $acc, AcPeriod $period,
-                                            $addPrevBalance = true)
-    {
+    public static function accPeriodBalance(
+        AcRecAcc $acc,
+        AcPeriod $period,
+        bool $addPrevBalance = true,
+        array $filterByCodes = []
+    ) {
         $connection = Yii::$app->getDb();
+        $whereCodes = '';
+        if ($filterByCodes) {
+            $whereCodes = ' AND code IN (\'' . implode('\',\'', $filterByCodes) . '\')';
+        }
         $command    = $connection->createCommand('
             SELECT
               IFNULL(SUM(
@@ -623,7 +630,7 @@ class AcTran extends BaseAcTran
               period_id = :period_id
               AND ac_tran.sys_company_id = :sysCompanyId
               AND  (debit_rec_acc_id = :acc_id OR credit_rec_acc_id = :acc_id)
-          ',
+          ' . $whereCodes,
             [
             ':acc_id' => $acc->id,
             ':period_id' => $period->id,
@@ -1191,7 +1198,11 @@ class AcTran extends BaseAcTran
      * @return array
      * @throws \yii\db\Exception|\yii\base\Exception
      */
-    public static function accByDaysFilter($accountId, AcPeriod $period, $filter): array
+    public static function accByDaysFilter(
+        int $accountId,
+        AcPeriod $period,
+        array $filter
+    ): array
     {
 
         $query = AccQueries::joinRefs(
