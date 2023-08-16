@@ -76,7 +76,7 @@ class AcTran extends BaseAcTran
         $model->credit_rec_acc_id = $creditAcc->id;
         $model->amount            = $amt;
         $model->t_user_id         = $userId;
-        $model->t_datetime        = $tranTime;
+        $model->t_datetime        = date('Y-m-d H:i:s');
         if ($code) {
             $model->code = $code;
         }
