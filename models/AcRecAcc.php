@@ -205,6 +205,7 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $sysCompanyId
      * @param array $ref
      * @return self[]
+     * @throws \yii\base\Exception
      * @deprecated use AccQueries::joinRefs()->all()
      */
     public static function filterAcc(int $accId, int $sysCompanyId, $ref): array
