@@ -59,7 +59,7 @@ class AcAccount extends BaseAcAccount
     public static function findOne($condition)
     {
         if(!is_array($condition)){
-            if(self::$allTableRows){
+            if(self::$allTableRows && isset(self::$allTableRows[$condition])){
                 return self::$allTableRows[$condition];
             }
             foreach(self::find()->all() as $row){
