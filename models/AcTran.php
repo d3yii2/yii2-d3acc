@@ -955,8 +955,8 @@ class AcTran extends BaseAcTran
                     ac_tran.debit_rec_acc_id in ('.$accdIdInList.')
             ')
             ->addGroupBy('ac_tran.accounting_date')
-            ->asArray()
-            ->all()
+            ->createCommand()
+            ->queryAll()
         ;
 //        $connection = Yii::$app->getDb();
 //        $command    = $connection->createCommand('
