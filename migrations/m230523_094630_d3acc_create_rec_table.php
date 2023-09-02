@@ -4,7 +4,11 @@ use yii\db\Migration;
 
 class m230523_094630_d3acc_create_rec_table  extends Migration {
 
-    public function safeUp() { 
+    public function safeUp() {
+
+        $this->execute("
+            DROP TABLE  IF EXISTS `ac_rec_table`; 
+        ");
         $this->execute('
             CREATE TABLE `ac_rec_table` (
               `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -21,7 +25,9 @@ class m230523_094630_d3acc_create_rec_table  extends Migration {
     }
 
     public function safeDown() {
-        echo "m230523_094630_d3acc_create_rec_table cannot be reverted.\n";
-        return false;
+        $this->execute("
+            DROP TABLE  IF EXISTS `ac_rec_table`; 
+        ");
+        return true;
     }
 }
