@@ -18,7 +18,7 @@ class m230523_094630_d3acc_create_rec_table  extends Migration {
         ');
 
         $this->execute('
-            ALTER TABLE `poker`.`ac_rec_table`
+            ALTER TABLE `ac_rec_table`
               ADD INDEX (`name` (6));
         ');
 
