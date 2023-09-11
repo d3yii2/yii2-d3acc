@@ -56,6 +56,7 @@ class AcAccountTest extends TestCase
         $this->acDef1->account_id = $this->acc->id;
         $this->acDef1->table      = 'Test01';
         $this->acDef1->pk_field   = 'id';
+        $this->acDef1->use_in_label   = 1;
         $this->acDef1->save();
 
         $this->acDef2             = new AcDef();
@@ -63,6 +64,7 @@ class AcAccountTest extends TestCase
         $this->acDef2->account_id = $this->acc->id;
         $this->acDef2->table      = 'Test02';
         $this->acDef2->pk_field   = 'id';
+        $this->acDef1->use_in_label   = 1;
         $this->acDef2->save();
 
         $this->acDef2             = new AcDef();
@@ -70,6 +72,7 @@ class AcAccountTest extends TestCase
         $this->acDef2->account_id = $this->acc->id;
         $this->acDef2->table      = AcRecTable::tableName();
         $this->acDef2->pk_field   = 'id';
+        $this->acDef1->use_in_label   = 1;
         $this->acDef2->save();
 
         $this->accD       = new AcAccount();
@@ -81,11 +84,13 @@ class AcAccountTest extends TestCase
         $acDef1->account_id = $this->accD->id;
         $acDef1->table      = 'Test03';
         $acDef1->pk_field   = 'id';
+        $this->acDef1->use_in_label   = 1;
         $acDef1->save();
 
         $this->accW       = new AcAccount();
         $this->accW->code = 'TestW';
         $this->accW->name = 'Name TestW';
+        $this->acDef1->use_in_label   = 1;
         $this->accW->save();
 
         $acwDef1             = new AcDef();
@@ -93,6 +98,7 @@ class AcAccountTest extends TestCase
         $acwDef1->code      = 'A-Test0W';
         $acwDef1->table      = 'Test0W';
         $acwDef1->pk_field   = 'id';
+        $this->acDef1->use_in_label   = 1;
         $acwDef1->save();
 
         $acwDef2             = new AcDef();
@@ -100,6 +106,7 @@ class AcAccountTest extends TestCase
         $acwDef2->code      = 'B-Test0W';
         $acwDef2->table      = 'Test0W';
         $acwDef2->pk_field   = 'id';
+        $this->acDef1->use_in_label   = 1;
         $acwDef2->save();
 
         $period = new AcPeriod();

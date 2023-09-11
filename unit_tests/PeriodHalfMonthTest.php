@@ -5,17 +5,18 @@ namespace utest;
 use yii;
 use d3acc\components\PeriodHalfMonth;
 use d3acc\models\AcPeriod;
+use PHPUnit\Framework\TestCase;
 
-class PeriodHalfMonthTest extends \PHPUnit_Framework_TestCase
+class PeriodHalfMonthTest extends TestCase
 {
     const PERIOD_TYPE = 8;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->deletePeriodType(self::PERIOD_TYPE);
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->deletePeriodType(self::PERIOD_TYPE);
     }
