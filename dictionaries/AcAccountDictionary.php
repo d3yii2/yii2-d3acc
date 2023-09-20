@@ -40,6 +40,11 @@ class AcAccountDictionary{
         return array_flip(self::getCodeList($sysCompanyId))[$code]??false;
     }
 
+    public static function getCodeById(int $sysCompanyId, int $accountId)
+    {
+        return self::getCodeList($sysCompanyId)[$accountId]??false;
+    }
+
     public static function clearCache(): void
     {
         foreach(AcAccount::find()
