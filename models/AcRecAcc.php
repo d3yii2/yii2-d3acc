@@ -92,14 +92,14 @@ class AcRecAcc extends BaseAcRecAcc
 
                 /** if used AcRecTable, get id  */
                 if ($acDef->table === AcRecTable::tableName()) {
-                    if (!$recTable = AcRecTable::findOne(['name' => $pkValue])) {
-                        $recTable = new AcRecTable();
-                        $recTable->name = $pkValue;
-                        if (!$recTable->save()) {
-                            throw new D3ActiveRecordException($recTable);
-                        }
-                    }
-                    $pkValue = $recTable->id;
+//                    if (!$recTable = AcRecTable::findOne(['name' => $pkValue])) {
+//                        $recTable = new AcRecTable();
+//                        $recTable->name = $pkValue;
+//                        if (!$recTable->save()) {
+//                            throw new D3ActiveRecordException($recTable);
+//                        }
+//                    }
+                    $pkValue = AcRecTable::findIdOrCreate($pkValue);
                     $ref[$refKey] = $pkValue;
                 }
                 $findRecRef
