@@ -47,7 +47,6 @@ class AcTran extends BaseAcTran
         int $userId,
         string $tranTime = '',
         string $code = ''
-
     )
     {
 
@@ -1235,5 +1234,35 @@ class AcTran extends BaseAcTran
             ->groupBy('accounting_date')
             ->asArray()
             ->all();
+    }
+
+    /**
+     * @throws D3ActiveRecordException
+     */
+    public function createStorno(
+        string $date,
+        AcPeriod $period,
+        int $userId,
+        string $tranTime = '',
+        string $code = '',
+        string $notes = ''
+    ) {
+        $stornoTran = new self();
+        $stornoTran->sys_company_id = $this->sys_company_id;
+        $stornoTran->period = $period->id;
+        $stornoTran->accounting_date = $date;
+        $stornoTran->debit_rec_acc_id = $this->credit_rec_acc_id;
+        $stornoTran->credit_rec_acc_id = $this->debit_rec_acc_id;
+        $stornoTran->amount = $this->amount;
+        $stornoTran->code = $code;
+        $stornoTran->notes = $notes;
+        $stornoTran->t_user_id = $userId;
+        $stornoTran->t_datetime = $tranTime;
+        $stornoTran->ref_table = self::tableName();
+        $stornoTran->ref_id = $this->id;
+        if (!$stornoTran->save()) {
+            throw new D3ActiveRecordException($stornoTran);
+        }
+        return $stornoTran;
     }
 }
