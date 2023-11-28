@@ -1246,10 +1246,11 @@ class AcTran extends BaseAcTran
         string $tranTime = '',
         string $code = '',
         string $notes = ''
-    ) {
+    ):self
+    {
         $stornoTran = new self();
         $stornoTran->sys_company_id = $this->sys_company_id;
-        $stornoTran->period = $period->id;
+        $stornoTran->period_id = $period->id;
         $stornoTran->accounting_date = $date;
         $stornoTran->debit_rec_acc_id = $this->credit_rec_acc_id;
         $stornoTran->credit_rec_acc_id = $this->debit_rec_acc_id;
