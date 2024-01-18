@@ -12,6 +12,11 @@ use \d3acc\models\base\AcPeriod as BaseAcPeriod;
 class AcPeriod extends BaseAcPeriod
 {
     /**
+     * @var mixed
+     */
+    private static array $_activePeriods = [];
+
+    /**
      * find active period
      * @param int $sysCompanyId
      * @param int $periodType
@@ -20,6 +25,10 @@ class AcPeriod extends BaseAcPeriod
      */
     public static function getActivePeriod(int $sysCompanyId, int $periodType, string $date = '')
     {
+        $key = $sysCompanyId . '-' . $periodType . '-' . $date;
+        if (self::$_activePeriods[$key]??null) {
+            return self::$_activePeriods[$key];
+        }
         $query = self::find()
             ->where([
                 'period_type' => $periodType,
@@ -33,7 +42,7 @@ class AcPeriod extends BaseAcPeriod
             $query->andWhere(['status' => self::STATUS_ACTIVE]);
         }
         /** @var AcPeriod $period */
-        return $query->one();
+        return self::$_activePeriods[$key] = $query->one();
 
     }
 

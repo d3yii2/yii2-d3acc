@@ -15,6 +15,10 @@ use yii\helpers\VarDumper;
  */
 class AcRecAcc extends BaseAcRecAcc
 {
+    /**
+     * @var mixed
+     */
+    private static array $_acDef = [];
 
     /**
      * get record accounts
@@ -52,11 +56,7 @@ class AcRecAcc extends BaseAcRecAcc
         $labelRef = [];
         if ($ref) {
             $i = 0;
-            foreach ($acc
-                         ->getAcDefs()
-                         ->orderBy(['id'=>SORT_ASC])
-                         ->all() as $acDef
-            ) {
+            foreach (self::loadAcDef($accId) as $acDef) {
                 /** REF name can be table name or code */
                 $pkValue = null;
                 if ($acDef->code) {
@@ -178,9 +178,8 @@ class AcRecAcc extends BaseAcRecAcc
             $transaction->rollBack();
             throw new \Exception('Error: ' .json_encode($model->getErrors()));
         }
-
         if ($ref) {
-            foreach ($acc->getAcDefs()->all() as $acDef) {
+            foreach (self::loadAcDef($accId) as $acDef) {
                 $modelRecRef                 = new AcRecRef();
                 $modelRecRef->sys_company_id = $sysCompanyId;
                 $modelRecRef->def_id         = $acDef->id;
@@ -193,10 +192,19 @@ class AcRecAcc extends BaseAcRecAcc
                 }
             }
         }
-
         $transaction->commit();
-
         return $model;
+    }
+
+    public static function loadAcDef(int $accountId)
+    {
+        if (isset(self::$_acDef[$accountId])) {
+            return self::$_acDef[$accountId];
+        }
+        return self::$_acDef[$accountId] = AcDef::find()
+            ->where(['account_id' => $accountId])
+            ->orderBy(['id'=>SORT_ASC])
+            ->all();
     }
 
     /**
