@@ -48,7 +48,7 @@ class AcAccount extends BaseAcAccount
             return self::$_validateAcc[$key] = $model;
         }
 
-        if ($def = $model->getAcDefs()->all()) {
+        if ($def = AcDef::findByAcAccount($accId)) {
             foreach ($def as $defRecord) {
                 if (isset($ref[$defRecord->code])) {
                     unset($ref[$defRecord->code]);
