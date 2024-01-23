@@ -95,6 +95,11 @@ class AccQueries
                 ]);
             }
         }
+        if ($groupByPkValue) {
+            $findRecRef->addGroupBy([
+                '`ac_rec_acc`.`currency_id`'
+            ]);
+        }
         return $findRecRef;
     }
 
