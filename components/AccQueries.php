@@ -20,6 +20,16 @@ class AccQueries
      *  - can add in select all ref values,
      *  - can filter by acRecAcc.id
      *  - can filter ref values
+     * AccQueries::joinRefs(
+     *     Yii::$app->acc->getFondGameAccId(),
+     *     $acPeriod->sys_company_id,
+     *     [
+     *         'd3p_person' => $coachD3Person->id,
+     *         'pk_limit' => $coachPkPerson->limit_id
+     *     ]
+     * )
+     * ->all()
+     *
      * @param int $accId account_id
      * @param int $sysCompanyId
      * @param array{id: int|int[], [ac_def.table_name]: int|int[], [ac_def.code]: int|int[],} $ref use as filter. id filter by ac_rec_acc.id, [ac_def.table_name] or [ac_def.table_name] filter by value
