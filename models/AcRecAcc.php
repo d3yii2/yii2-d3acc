@@ -173,7 +173,7 @@ class AcRecAcc extends BaseAcRecAcc
         $model->sys_company_id = $sysCompanyId;
         $model->account_id = $accId;
         $model->currency_id = $currencyId;
-        $model->label      = substr(implode(',', $label),0,100);
+        $model->label      = mb_substr(implode(',', $label),0,100);
         if(!$model->save()){
             $transaction->rollBack();
             throw new \Exception('Error: ' .json_encode($model->getErrors()));
