@@ -742,7 +742,7 @@ class AcTran extends BaseAcTran
         if($startBalance){
             $startRecord = [
                 'amount' => AcPeriodBalance::accPeriodBalance($acc, $period),
-                'acc_label' => 'Start amount',
+                'acc_label' => Yii::t('d3acc','Start amount'),
                 'accounting_date' => '',
                 'code' => '',
                 'notes' => '',

@@ -1,2 +1,4 @@
 <?php
-return [];
+return [
+    'Start amount' => 'Начальная сумма'
+];
