@@ -181,6 +181,23 @@ Add new dimension value (ac_rec_ref table) and recalculate label for given exten
 $constructor->addDimensionRecAcc($extAccount->id, $definition->id, $pk_value);
 ```
 
+Filter accounts
+--------------
+
+```php 
+$filter = [
+    'person' => $personId // ac_def field as code
+];
+$filter['d3p_contact_type'] = 33// ac_def field as  table name (no defined code)
+        $query = AccQueries::joinRefs(
+            $accountId,
+            $sysCompanyId,
+            $filter,
+            $addSelectPkValue,
+            $groupByPkValue
+        );
+```
+
 Accounts remain
 ------------
 

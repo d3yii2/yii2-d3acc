@@ -1222,11 +1222,9 @@ class AcTran extends BaseAcTran
             $addSelectPkValue,
             $groupByPkValue
         );
-        $queryCredit = clone $query;
-        $queryCredit
+        $queryCredit = (clone $query)
             ->addSelect([
                 'amount' => 'ac_tran.amount',
-                'acRecAccId' => 'ac_rec_acc.id'
             ])
             ->innerJoin(
                 'ac_tran',
@@ -1237,11 +1235,9 @@ class AcTran extends BaseAcTran
                 'ac_tran.period_id' => $period->id,
                 'ac_tran.sys_company_id' => $period->sys_company_id
             ]);
-        $queryDebit = clone $query;
-        $queryDebit
+        $queryDebit = (clone $query)
             ->addSelect([
                 'amount' => '-ac_tran.amount',
-                'acRecAccId' => 'ac_rec_acc.id'
             ])
             ->innerJoin(
                 'ac_tran',
@@ -1258,7 +1254,6 @@ class AcTran extends BaseAcTran
             $balanceQuery = (clone $query)
                 ->addSelect([
                     'amount' => 'ac_period_balance.amount',
-                    'acRecAccId' => 'ac_rec_acc.id'
                 ])
                 ->innerJoin(
                     'ac_period_balance',
@@ -1277,7 +1272,7 @@ class AcTran extends BaseAcTran
                 'amount' => 'SUM(amount)',
             ])
             ->from(['main' => $queryCredit])
-            ->groupBy('acRecAccId')
+            ->groupBy('id')
             ->all();
     }
 
