@@ -1187,15 +1187,108 @@ class AcTran extends BaseAcTran
         return $balance;
     }
 
+    /**
+     * Balance account filtered by table values
+     *
+     * @param int $accountId
+     * @param AcPeriod $period
+     * @param array $filter - filter by ac_rec_ref fields
+     * @param bool $addSelectPkValue add ac_rec_ref fields in select
+     * @param bool $groupByPkValue group by ac_rec_ref fields
+     * @param bool $addPrevBalance add previous period balance
+     * @return array{
+     *     id:int,
+     *     sys_company_id:int,
+     *     account_id:int,
+     *     currency_id:int,
+     *     label:string,
+     *     amount:float
+     * }
+     * @throws \yii\base\Exception
+     */
+    public static function accRecAccBalanceFilter(
+        int $accountId,
+        AcPeriod $period,
+        array $filter,
+        bool  $addSelectPkValue = false,
+        bool  $groupByPkValue = false,
+        bool $addPrevBalance = false
+    ): array
+    {
+        $query = AccQueries::joinRefs(
+            $accountId,
+            $period->sys_company_id,
+            $filter,
+            $addSelectPkValue,
+            $groupByPkValue
+        );
+        $queryCredit = clone $query;
+        $queryCredit
+            ->addSelect([
+                'amount' => 'ac_tran.amount',
+                'acRecAccId' => 'ac_rec_acc.id'
+            ])
+            ->innerJoin(
+                'ac_tran',
+                'ac_rec_acc.id = ac_tran.credit_rec_acc_id'
+            )
+            ->andWhere([
+                'ac_rec_acc.account_id' => $accountId,
+                'ac_tran.period_id' => $period->id,
+                'ac_tran.sys_company_id' => $period->sys_company_id
+            ]);
+        $queryDebit = clone $query;
+        $queryDebit
+            ->addSelect([
+                'amount' => '-ac_tran.amount',
+                'acRecAccId' => 'ac_rec_acc.id'
+            ])
+            ->innerJoin(
+                'ac_tran',
+                'ac_rec_acc.id = ac_tran.debit_rec_acc_id'
+            )
+            ->andWhere([
+                'ac_rec_acc.account_id' => $accountId,
+                'ac_tran.period_id' => $period->id,
+                'ac_tran.sys_company_id' => $period->sys_company_id
+            ])
+            ->union($queryCredit);
+        ;
+        if ($addPrevBalance) {
+            $balanceQuery = (clone $query)
+                ->addSelect([
+                    'amount' => 'ac_period_balance.amount',
+                    'acRecAccId' => 'ac_rec_acc.id'
+                ])
+                ->innerJoin(
+                    'ac_period_balance',
+                    'ac_rec_acc.id = ac_period_balance.rec_acc_id'
+                )
+                ->andWhere([
+                    'ac_rec_acc.account_id' => $accountId,
+                    'ac_period_balance.period_id' => $period->prev_period,
+                    'ac_period_balance.sys_company_id' => $period->sys_company_id
+                ]);
+            $queryCredit->union($balanceQuery);
+        }
+        return (new Query())
+            ->select([
+                '*',
+                'amount' => 'SUM(amount)',
+            ])
+            ->from(['main' => $queryCredit])
+            ->groupBy('acRecAccId')
+            ->all();
+    }
 
     /**
      * Balance account filtered by table values
      *
-     * @param $accountId
+     * @param int $accountId
      * @param AcPeriod $period
-     * @param $filter
+     * @param array $filter
      * @return array
-     * @throws \yii\db\Exception|\yii\base\Exception
+     * @throws \yii\base\Exception
      */
     public static function accByDaysFilter(
         int $accountId,

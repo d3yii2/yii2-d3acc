@@ -180,3 +180,19 @@ Add new dimension value (ac_rec_ref table) and recalculate label for given exten
 ```php
 $constructor->addDimensionRecAcc($extAccount->id, $definition->id, $pk_value);
 ```
+
+Accounts remain
+------------
+
+remains for account subcontracts. Can use filter
+```php
+    $walletsRemainData = AcTran::accRecAccBalanceFilter(
+        Yii::$app->acc->getFondPlayerWalletAccId(),
+        Yii::$app->acc->getActivePeriod(),
+        [],
+        true,
+        false,
+        true
+    );
+
+```
