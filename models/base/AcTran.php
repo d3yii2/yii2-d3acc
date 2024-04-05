@@ -5,6 +5,7 @@
 namespace d3acc\models\base;
 
 use Yii;
+use d3system\behaviors\D3DateTimeBehavior;
 
 /**
  * This is the base-model class for table "ac_tran".
@@ -15,7 +16,7 @@ use Yii;
  * @property string $accounting_date
  * @property integer $debit_rec_acc_id
  * @property integer $credit_rec_acc_id
- * @property string $amount
+ * @property float $amount
  * @property string $code
  * @property string $notes
  * @property integer $t_user_id
@@ -50,16 +51,22 @@ abstract class AcTran extends \yii\db\ActiveRecord
     {
         return [
             'required' => [['period_id', 'accounting_date', 'debit_rec_acc_id', 'credit_rec_acc_id', 'amount', 't_user_id', 't_datetime'], 'required'],
-            'smallint Unsigned' => [['sys_company_id','period_id','debit_rec_acc_id','credit_rec_acc_id','t_user_id'],'integer' ,'min' => 0 ,'max' => 65535],
-            'integer Unsigned' => [['id','ref_id'],'integer' ,'min' => 0 ,'max' => 4294967295],
+            'decimal-unsigned-10-2' => [
+                ['amount'],
+                    'number',
+                    'numberPattern' => '/^(\+?((\d{1,8})|(\d{0,8}\.\d{0,2})|(\.\d{1,2})))$/',
+                    'message' =>  Yii::t('blankonthema', 'Invalid number format')
+                ],
+            'smallint Unsigned' => [['sys_company_id','period_id','t_user_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            'integer Unsigned' => [['id','debit_rec_acc_id','credit_rec_acc_id','ref_id'],'integer' ,'min' => 0 ,'max' => 4294967295],
             [['accounting_date', 't_datetime'], 'safe'],
             [['amount'], 'number'],
             [['notes'], 'string'],
             [['code'], 'string', 'max' => 20],
             [['ref_table'], 'string', 'max' => 256],
-            [['debit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['debit_rec_acc_id' => 'id']],
-            [['credit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['credit_rec_acc_id' => 'id']],
-            [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['period_id' => 'id']],
+            [['credit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::class, 'targetAttribute' => ['credit_rec_acc_id' => 'id']],
+            [['debit_rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::class, 'targetAttribute' => ['debit_rec_acc_id' => 'id']],
+            [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::class, 'targetAttribute' => ['period_id' => 'id']],
         ];
     }
 
@@ -110,7 +117,7 @@ abstract class AcTran extends \yii\db\ActiveRecord
      */
     public function getAcTranDims()
     {
-        return $this->hasMany(\d3acc\models\AcTranDim::className(), ['tran_id' => 'id'])->inverseOf('tran');
+        return $this->hasMany(\d3acc\models\AcTranDim::class, ['tran_id' => 'id'])->inverseOf('tran');
     }
 
     /**
@@ -118,7 +125,7 @@ abstract class AcTran extends \yii\db\ActiveRecord
      */
     public function getCreditRecAcc()
     {
-        return $this->hasOne(\d3acc\models\AcRecAcc::className(), ['id' => 'credit_rec_acc_id'])->inverseOf('acTrans0');
+        return $this->hasOne(\d3acc\models\AcRecAcc::class, ['id' => 'credit_rec_acc_id'])->inverseOf('acTrans');
     }
 
     /**
@@ -134,9 +141,8 @@ abstract class AcTran extends \yii\db\ActiveRecord
      */
     public function getPeriod()
     {
-        return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'period_id'])->inverseOf('acTrans');
+        return $this->hasOne(\d3acc\models\AcPeriod::class, ['id' => 'period_id'])->inverseOf('acTrans');
     }
-
 
 
 

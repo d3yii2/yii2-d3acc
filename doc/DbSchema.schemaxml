@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemadesigner version="6.5">
 <source>
-<database charset="latin1" collation="latin1_swedish_ci">poker</database>
+<database charset="latin1" collation="latin1_swedish_ci">adrona</database>
 </source>
 <canvas zoom="100">
 <tables>
@@ -16,7 +16,7 @@
   `code` char(10) CHARACTER SET latin1 NOT NULL COMMENT 'Code',
   `name` varchar(50) CHARACTER SET latin1 NOT NULL COMMENT 'Name',
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=351 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_def" view="colnames">
 <left>1098</left>
@@ -34,7 +34,7 @@
   PRIMARY KEY (`id`),
   KEY `account_id` (`account_id`),
   CONSTRAINT `ac_def_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `ac_account` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=898 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=450 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_dim" view="colnames">
 <left>924</left>
@@ -82,7 +82,7 @@
   KEY `prev_period` (`prev_period`),
   CONSTRAINT `ac_period_ibfk_1` FOREIGN KEY (`prev_period`) REFERENCES `ac_period` (`id`),
   CONSTRAINT `ac_period_ibfk_2` FOREIGN KEY (`next_period`) REFERENCES `ac_period` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=293 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=205 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_period_balance" view="colnames">
 <left>531</left>
@@ -100,7 +100,7 @@
   KEY `rec_acc_id` (`rec_acc_id`),
   CONSTRAINT `ac_period_balance_ibfk_1` FOREIGN KEY (`period_id`) REFERENCES `ac_period` (`id`),
   CONSTRAINT `ac_period_balance_ibfk_2` FOREIGN KEY (`rec_acc_id`) REFERENCES `ac_rec_acc` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=698609 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=1109128 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_period_balance_dim" view="colnames">
 <left>726</left>
@@ -121,7 +121,7 @@
   CONSTRAINT `fk_ac_period_balance_dim_ac_account` FOREIGN KEY (`account_id`) REFERENCES `ac_account` (`id`),
   CONSTRAINT `fk_ac_period_balance_dim_ac_dim` FOREIGN KEY (`dim_id`) REFERENCES `ac_dim` (`id`),
   CONSTRAINT `fk_ac_period_balance_dim_ac_period` FOREIGN KEY (`period_id`) REFERENCES `ac_period` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=955 DEFAULT CHARSET=latin1</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=1190 DEFAULT CHARSET=latin1</sql_create_table>
 </table>
 <table name="ac_rec_acc" view="colnames">
 <left>724</left>
@@ -137,7 +137,7 @@
   PRIMARY KEY (`id`),
   KEY `account_id` (`account_id`),
   CONSTRAINT `ac_rec_acc_ibfk_1` FOREIGN KEY (`account_id`) REFERENCES `ac_account` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=46810 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=65536 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_rec_ref" view="colnames">
 <left>933</left>
@@ -155,7 +155,7 @@
   KEY `def_id` (`def_id`,`pk_value`,`rec_account_id`,`sys_company_id`),
   CONSTRAINT `ac_rec_ref_ibfk_2` FOREIGN KEY (`rec_account_id`) REFERENCES `ac_rec_acc` (`id`),
   CONSTRAINT `ac_rec_ref_ibfk_3` FOREIGN KEY (`def_id`) REFERENCES `ac_def` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=106787 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=145865 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_tran" view="colnames">
 <left>531</left>
@@ -184,7 +184,7 @@
   CONSTRAINT `ac_tran_ibfk_1` FOREIGN KEY (`debit_rec_acc_id`) REFERENCES `ac_rec_acc` (`id`),
   CONSTRAINT `ac_tran_ibfk_2` FOREIGN KEY (`credit_rec_acc_id`) REFERENCES `ac_rec_acc` (`id`),
   CONSTRAINT `ac_tran_ibfk_3` FOREIGN KEY (`period_id`) REFERENCES `ac_period` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=111113127 DEFAULT CHARSET=utf8</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=111387887 DEFAULT CHARSET=utf8</sql_create_table>
 </table>
 <table name="ac_tran_dim" view="colnames">
 <left>726</left>
@@ -202,7 +202,7 @@
   KEY `fk_ac_dim` (`dim_id`),
   CONSTRAINT `fk_ac_dim` FOREIGN KEY (`dim_id`) REFERENCES `ac_dim` (`id`),
   CONSTRAINT `fk_ac_tran` FOREIGN KEY (`tran_id`) REFERENCES `ac_tran` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=489803 DEFAULT CHARSET=latin1</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=697333 DEFAULT CHARSET=latin1</sql_create_table>
 </table>
 <table name="ac_rec_table" view="colnames">
 <left>1093</left>
@@ -214,7 +214,7 @@
   `name` varchar(255) CHARACTER SET utf8 NOT NULL,
   PRIMARY KEY (`id`),
   KEY `name` (`name`(6))
-) ENGINE=InnoDB AUTO_INCREMENT=23 DEFAULT CHARSET=latin1</sql_create_table>
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=latin1</sql_create_table>
 </table>
 </tables>
 </canvas>

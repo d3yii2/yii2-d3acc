@@ -6,7 +6,6 @@ namespace d3acc\models\base;
 
 use Yii;
 
-
 /**
  * This is the base-model class for table "ac_rec_ref".
  *
@@ -33,7 +32,6 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
         return 'ac_rec_ref';
     }
 
-
     /**
      * @inheritdoc
      */
@@ -41,11 +39,11 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
     {
         return [
             'required' => [['def_id', 'rec_account_id', 'pk_value'], 'required'],
-            'smallint Unsigned' => [['sys_company_id','def_id','rec_account_id'],'integer' ,'min' => 0 ,'max' => 65535],
-            'integer Unsigned' => [['id'],'integer' ,'min' => 0 ,'max' => 4294967295],
+            'smallint Unsigned' => [['sys_company_id','def_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            'integer Unsigned' => [['id','rec_account_id'],'integer' ,'min' => 0 ,'max' => 4294967295],
             'bigint Unsigned' => [['pk_value'],'integer' ,'min' => 0 ,'max' => 1.844674407371E+19],
-            [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['rec_account_id' => 'id']],
-            [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDef::className(), 'targetAttribute' => ['def_id' => 'id']]
+            [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDef::class, 'targetAttribute' => ['def_id' => 'id']],
+            [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::class, 'targetAttribute' => ['rec_account_id' => 'id']]
         ];
     }
 
@@ -68,7 +66,7 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
      */
     public function getDef()
     {
-        return $this->hasOne(\d3acc\models\AcDef::className(), ['id' => 'def_id'])->inverseOf('acRecRefs');
+        return $this->hasOne(\d3acc\models\AcDef::class, ['id' => 'def_id'])->inverseOf('acRecRefs');
     }
 
     /**
@@ -76,9 +74,8 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
      */
     public function getRecAccount()
     {
-        return $this->hasOne(\d3acc\models\AcRecAcc::className(), ['id' => 'rec_account_id'])->inverseOf('acRecRefs');
+        return $this->hasOne(\d3acc\models\AcRecAcc::class, ['id' => 'rec_account_id'])->inverseOf('acRecRefs');
     }
-
 
 
 
