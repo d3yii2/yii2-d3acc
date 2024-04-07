@@ -2,7 +2,7 @@
 
 use yii\db\Migration;
 
-class m240405_131922_d3acc_ac_rec_acc_id_to_mediumint  extends Migration {
+class m230523_101922_d3acc_ac_rec_acc_id_to_mediumint  extends Migration {
 
     public function safeUp() { 
 
