@@ -8,31 +8,79 @@ use yii\helpers\ArrayHelper;
 
 class AcAccountDictionary{
 
-    private const CACHE_KEY_LIST = 'AcAccountDictionaryList';
+    private const CACHE_KEY_LIST = 'AcAccountDictionaryListC';
 
-    public static function getCodeList(int $sysCompanyId): array
+    public static function getCodeList(int $sysCompanyId, string $translationCategory = null): array
     {
-        return Yii::$app->cache->getOrSet(
-            self::createKey($sysCompanyId),
-            static function () use($sysCompanyId) {
-                return ArrayHelper::map(
-                    AcAccount::find()
+        $isCached = true;
+        if (!$list = Yii::$app->cache->get(self::createKey($sysCompanyId))) {
+            $isCached = false;
+            $list = [
+                'base' => ArrayHelper::map(
+                AcAccount::find()
                     ->select([
                         'id' => 'id',
                         'name' => 'code',
                     ])
                     ->where(['sys_company_id' => $sysCompanyId])
-                    ->orderBy([
-                        'code' => SORT_ASC,
-                    ])
+                    ->orderBy(['code' => SORT_ASC])
                     ->asArray()
-                    ->all()
-                ,
-                'id',
-                'name'
-                );
+                    ->all(),
+                    'id',
+                    'name'
+                )
+            ];
+        }
+        if ($translationCategory && !isset($list[$translationCategory])) {
+            $isCached = false;
+            foreach($list['base'] as $id => $name) {
+                $list[$translationCategory][$id] = Yii::t($translationCategory,$name);
             }
-        );
+        }
+        if (!$isCached) {
+            Yii::$app->cache->set(self::createKey($sysCompanyId),$list);
+        }
+        if ($translationCategory) {
+            return $list[$translationCategory];
+        }
+
+        return $list['base'];
+    }
+    public static function getNameList(int $sysCompanyId, string $translationCategory = null): array
+    {
+        $isCached = true;
+        if (!$list = Yii::$app->cache->get(self::createNameKey($sysCompanyId))) {
+            $isCached = false;
+            $list = [
+                'base' => ArrayHelper::map(
+                AcAccount::find()
+                    ->select([
+                        'id' => 'id',
+                        'name' => 'name',
+                    ])
+                    ->where(['sys_company_id' => $sysCompanyId])
+                    ->orderBy(['code' => SORT_ASC])
+                    ->asArray()
+                    ->all(),
+                    'id',
+                    'name'
+                )
+            ];
+        }
+        if ($translationCategory && !isset($list[$translationCategory])) {
+            $isCached = false;
+            foreach($list['base'] as $id => $name) {
+                $list[$translationCategory][$id] = Yii::t($translationCategory,$name);
+            }
+        }
+        if (!$isCached) {
+            Yii::$app->cache->set(self::createNameKey($sysCompanyId),$list);
+        }
+        if ($translationCategory) {
+            return $list[$translationCategory];
+        }
+
+        return $list['base'];
     }
 
     public static function getIdByCode(int $sysCompanyId,string $code)
@@ -45,6 +93,11 @@ class AcAccountDictionary{
         return self::getCodeList($sysCompanyId)[$accountId]??false;
     }
 
+    public static function getNameById(int $sysCompanyId, int $accountId, string $translationCategory = null)
+    {
+        return self::getNameList($sysCompanyId, $translationCategory)[$accountId]??false;
+    }
+
     public static function clearCache(): void
     {
         foreach(AcAccount::find()
@@ -54,11 +107,17 @@ class AcAccountDictionary{
                 as $sysCompanyId
         ) {
             Yii::$app->cache->delete(self::createKey($sysCompanyId));
+            Yii::$app->cache->delete(self::createNameKey($sysCompanyId));
         }
     }
 
     private static function createKey(int $sysCompanyId): string
     {
         return self::CACHE_KEY_LIST . '-' . $sysCompanyId;
+    }
+
+    private static function createNameKey(int $sysCompanyId): string
+    {
+        return self::CACHE_KEY_LIST . '-name-' . $sysCompanyId;
     }
 }
