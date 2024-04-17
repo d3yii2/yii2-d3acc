@@ -43,7 +43,7 @@ abstract class AcPeriodBalance extends \yii\db\ActiveRecord
                 ['amount'],
                     'number',
                     'numberPattern' => '/^([\+-]?((\d{1,10})|(\d{0,10}\.\d{0,2})|(\.\d{1,2})))$/',
-                    'message' =>  Yii::t('blankonthema', 'Invalid number format')
+                    'message' =>  Yii::t('crud', 'Invalid number format')
                 ],
             'smallint Unsigned' => [['sys_company_id','period_id'],'integer' ,'min' => 0 ,'max' => 65535],
             'integer Unsigned' => [['id','rec_acc_id'],'integer' ,'min' => 0 ,'max' => 4294967295],

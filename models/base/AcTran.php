@@ -55,7 +55,7 @@ abstract class AcTran extends \yii\db\ActiveRecord
                 ['amount'],
                     'number',
                     'numberPattern' => '/^(\+?((\d{1,8})|(\d{0,8}\.\d{0,2})|(\.\d{1,2})))$/',
-                    'message' =>  Yii::t('blankonthema', 'Invalid number format')
+                    'message' =>  Yii::t('crud', 'Invalid number format')
                 ],
             'smallint Unsigned' => [['sys_company_id','period_id','t_user_id'],'integer' ,'min' => 0 ,'max' => 65535],
             'integer Unsigned' => [['id','debit_rec_acc_id','credit_rec_acc_id','ref_id'],'integer' ,'min' => 0 ,'max' => 4294967295],
