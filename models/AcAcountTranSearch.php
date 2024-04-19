@@ -40,13 +40,27 @@ class AcAcountTranSearch extends AcTran
      */
     public function search(): ActiveDataProvider
     {
-        $query = $this->accPeriodTranQuery();
+        /** start balance */
         $startBalance = $this->startBalance();
-        $finishBalance = $this->finishBalance((clone $query));
-        $finishBalance->amount += $startBalance->amount;
+
+        /** transactions */
+        $models = $this
+            ->accPeriodTranQuery()
+            ->all();
+
+        /** finish balance */
+        $tranTotalAmount = 0;
+        foreach ($models as $model) {
+            $tranTotalAmount += $model->amount;
+        }
+        $finishBalance = new self();
+        $finishBalance->id = 999999999;
+        $finishBalance->amount = $tranTotalAmount + $startBalance->amount;
+        $finishBalance->acc_label = Yii::t('d3acc', 'Total:');
+
         $models = array_merge(
             [1 => $startBalance],
-            (clone $query)->all(),
+            $models,
             [$finishBalance->id => $finishBalance]
         );
         return new ActiveDataProvider([
@@ -109,15 +123,5 @@ class AcAcountTranSearch extends AcTran
         $model->amount = AcPeriodBalance::accPeriodBalance($this->accRec, $this->period);
         $model->acc_label = Yii::t('d3acc', 'Start amount');
         return $model;
-    }
-
-    public function finishBalance($query): AcAcountTranSearch
-    {
-        $model = new self();
-        $model->id = 999999999;
-        $model->amount = $query->sum('amount');
-        $model->acc_label = Yii::t('d3acc', 'Total:');
-        return $model;
-
     }
 }
