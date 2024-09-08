@@ -852,14 +852,19 @@ class AcTran extends BaseAcTran
      * @return array
      * @throws Exception
      */
-    public static function accFilterExtPeriodBalanceByDays($accList,
-                                                           AcPeriod $period)
+    public static function accFilterExtPeriodBalanceByDays(
+        array $accList,
+        AcPeriod $period = null,
+        int $sysCompanyId = null
+    )
     {
 
         if (!$accList) {
             return [];
         }
-
+        if (!$sysCompanyId) {
+            $sysCompanyId = $period->sys_company_id;
+        }
         /**
          * get common account_id
          */
@@ -872,7 +877,7 @@ class AcTran extends BaseAcTran
             $accId = $acc->account_id;
         }
 
-        $innerJoin = $where     = $broupBy   = [];
+        $broupBy   = [];
         foreach (AcAccount::findOne($accId)->getAcDefs()->all() as $acDef) {
             $tableAsName = '`r'.$acDef->table.'`';
 
@@ -889,6 +894,15 @@ class AcTran extends BaseAcTran
         $accdIdInList = "'".implode("','", $accIdList)."'";
 
         $connection = Yii::$app->getDb();
+        $where = '';
+        $params = [
+            ':sysCompanyId' => $sysCompanyId,
+        ];
+
+        if ($period) {
+            $where = 'period_id = :period_id AND ';
+            $params[':period_id'] = $period->id;
+        }
         $command    = $connection->createCommand('
             SELECT
               accounting_date `date`,
@@ -915,8 +929,8 @@ class AcTran extends BaseAcTran
                                    END
               '.implode(PHP_EOL, $join).'
             WHERE
-                period_id = :period_id
-                AND ac_tran.sys_company_id = :sysCompanyId
+                ' . $where . '
+                ac_tran.sys_company_id = :sysCompanyId
                 AND  (
                     credit_rec_acc_id in ('.$accdIdInList.')
                     OR
@@ -928,10 +942,8 @@ class AcTran extends BaseAcTran
             ORDER BY
                 accounting_date
           ',
-            [
-                ':period_id' => $period->id,
-                ':sysCompanyId' => $period->sys_company_id
-            ]);
+          $params
+        );
 
         return $command->queryAll();
     }
