@@ -5,7 +5,10 @@
 namespace d3acc\models\base;
 
 use Yii;
-
+use d3acc\models\AcPeriod;
+use d3acc\models\AcRecAcc;
+use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
 
 /**
  * This is the base-model class for table "ac_period_balance".
@@ -14,16 +17,14 @@ use Yii;
  * @property integer $sys_company_id
  * @property integer $period_id
  * @property integer $rec_acc_id
- * @property string $amount
+ * @property float $amount
  *
- * @property \d3acc\models\AcPeriod $period
- * @property \d3acc\models\AcRecAcc $recAcc
+ * @property AcPeriod $period
+ * @property AcRecAcc $recAcc
  * @property string $aliasModel
  */
-abstract class AcPeriodBalance extends \yii\db\ActiveRecord
+abstract class AcPeriodBalance extends ActiveRecord
 {
-
-
 
     /**
      * @inheritdoc
@@ -33,26 +34,31 @@ abstract class AcPeriodBalance extends \yii\db\ActiveRecord
         return 'ac_period_balance';
     }
 
-
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'required' => [['period_id', 'rec_acc_id', 'amount'], 'required'],
-            'smallint Unsigned' => [['sys_company_id','period_id','rec_acc_id'],'integer' ,'min' => 0 ,'max' => 65535],
-            'integer Unsigned' => [['id'],'integer' ,'min' => 0 ,'max' => 4294967295],
+            'decimal-signed-12-2' => [
+                ['amount'],
+                    'number',
+                    'numberPattern' => '/^([\+-]?((\d{1,10})|(\d{0,10}\.\d{0,2})|(\.\d{1,2})))$/',
+                    'message' =>  Yii::t('crud', 'Invalid number format')
+                ],
+            'smallint Unsigned' => [['sys_company_id','period_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            'integer Unsigned' => [['id','rec_acc_id'],'integer' ,'min' => 0 ,'max' => 4294967295],
             [['amount'], 'number'],
-            [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcPeriod::className(), 'targetAttribute' => ['period_id' => 'id']],
-            [['rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['rec_acc_id' => 'id']]
+            [['period_id'], 'exist', 'skipOnError' => true, 'targetClass' => AcPeriod::class, 'targetAttribute' => ['period_id' => 'id']],
+            [['rec_acc_id'], 'exist', 'skipOnError' => true, 'targetClass' => AcRecAcc::class, 'targetAttribute' => ['rec_acc_id' => 'id']]
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
@@ -76,22 +82,23 @@ abstract class AcPeriodBalance extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
-    public function getPeriod()
+    public function getPeriod(): ActiveQuery
     {
-        return $this->hasOne(\d3acc\models\AcPeriod::className(), ['id' => 'period_id'])->inverseOf('acPeriodBalances');
+        return $this
+            ->hasOne(AcPeriod::class, ['id' => 'period_id'])
+            ->inverseOf('acPeriodBalances');
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
-    public function getRecAcc()
+    public function getRecAcc(): ActiveQuery
     {
-        return $this->hasOne(\d3acc\models\AcRecAcc::className(), ['id' => 'rec_acc_id'])->inverseOf('acPeriodBalances');
+        return $this
+            ->hasOne(AcRecAcc::class, ['id' => 'rec_acc_id'])
+            ->inverseOf('acPeriodBalances');
     }
-
-
-
 
 }

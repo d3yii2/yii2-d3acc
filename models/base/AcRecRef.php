@@ -5,7 +5,10 @@
 namespace d3acc\models\base;
 
 use Yii;
-
+use d3acc\models\AcDef;
+use d3acc\models\AcRecAcc;
+use yii\db\ActiveQuery;
+use yii\db\ActiveRecord;
 
 /**
  * This is the base-model class for table "ac_rec_ref".
@@ -16,14 +19,12 @@ use Yii;
  * @property integer $rec_account_id
  * @property string $pk_value
  *
- * @property \d3acc\models\AcDef $def
- * @property \d3acc\models\AcRecAcc $recAccount
+ * @property AcDef $def
+ * @property AcRecAcc $recAccount
  * @property string $aliasModel
  */
-abstract class AcRecRef extends \yii\db\ActiveRecord
+abstract class AcRecRef extends ActiveRecord
 {
-
-
 
     /**
      * @inheritdoc
@@ -33,26 +34,25 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
         return 'ac_rec_ref';
     }
 
-
     /**
      * @inheritdoc
      */
-    public function rules()
+    public function rules(): array
     {
         return [
             'required' => [['def_id', 'rec_account_id', 'pk_value'], 'required'],
-            'smallint Unsigned' => [['sys_company_id','def_id','rec_account_id'],'integer' ,'min' => 0 ,'max' => 65535],
-            'integer Unsigned' => [['id'],'integer' ,'min' => 0 ,'max' => 4294967295],
+            'smallint Unsigned' => [['sys_company_id','def_id'],'integer' ,'min' => 0 ,'max' => 65535],
+            'integer Unsigned' => [['id','rec_account_id'],'integer' ,'min' => 0 ,'max' => 4294967295],
             'bigint Unsigned' => [['pk_value'],'integer' ,'min' => 0 ,'max' => 1.844674407371E+19],
-            [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcRecAcc::className(), 'targetAttribute' => ['rec_account_id' => 'id']],
-            [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => \d3acc\models\AcDef::className(), 'targetAttribute' => ['def_id' => 'id']]
+            [['def_id'], 'exist', 'skipOnError' => true, 'targetClass' => AcDef::class, 'targetAttribute' => ['def_id' => 'id']],
+            [['rec_account_id'], 'exist', 'skipOnError' => true, 'targetClass' => AcRecAcc::class, 'targetAttribute' => ['rec_account_id' => 'id']]
         ];
     }
 
     /**
      * @inheritdoc
      */
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return [
             'id' => Yii::t('d3acc', 'ID'),
@@ -64,22 +64,23 @@ abstract class AcRecRef extends \yii\db\ActiveRecord
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
-    public function getDef()
+    public function getDef(): ActiveQuery
     {
-        return $this->hasOne(\d3acc\models\AcDef::className(), ['id' => 'def_id'])->inverseOf('acRecRefs');
+        return $this
+            ->hasOne(AcDef::class, ['id' => 'def_id'])
+            ->inverseOf('acRecRefs');
     }
 
     /**
-     * @return \yii\db\ActiveQuery
+     * @return ActiveQuery
      */
-    public function getRecAccount()
+    public function getRecAccount(): ActiveQuery
     {
-        return $this->hasOne(\d3acc\models\AcRecAcc::className(), ['id' => 'rec_account_id'])->inverseOf('acRecRefs');
+        return $this
+            ->hasOne(AcRecAcc::class, ['id' => 'rec_account_id'])
+            ->inverseOf('acRecRefs');
     }
-
-
-
 
 }
