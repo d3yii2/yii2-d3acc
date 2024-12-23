@@ -48,7 +48,7 @@ class AcTranSearch extends AcTran
         );
     }
 
-    public function rules()
+    public function rules(): array
     {
         $rules = parent::rules();
         unset($rules['required']);
@@ -71,7 +71,7 @@ class AcTranSearch extends AcTran
         }
     }
 
-    public function attributeLabels()
+    public function attributeLabels(): array
     {
         return array_merge(
             parent::attributeLabels(),

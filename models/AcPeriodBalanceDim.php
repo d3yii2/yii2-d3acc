@@ -3,8 +3,8 @@
 namespace d3acc\models;
 
 use Yii;
-use \d3acc\models\base\AcPeriodBalanceDim as BaseAcPeriodBalanceDim;
-use yii\helpers\ArrayHelper;
+use d3acc\models\base\AcPeriodBalanceDim as BaseAcPeriodBalanceDim;
+use yii\db\Exception;
 
 /**
  * This is the model class for table "ac_period_balance_dim".
@@ -15,6 +15,7 @@ class AcPeriodBalanceDim extends BaseAcPeriodBalanceDim
      * save period dim balance
      * @param \d3acc\models\AcPeriod $period
      * @return type
+     * @throws Exception
      */
     public static function saveDimPeriodBalance(AcPeriod $period)
     {

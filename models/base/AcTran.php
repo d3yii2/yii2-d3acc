@@ -8,7 +8,6 @@ use Yii;
 use d3acc\models\AcPeriod;
 use d3acc\models\AcRecAcc;
 use d3acc\models\AcTranDim;
-use d3system\behaviors\D3DateTimeBehavior;
 use yii\db\ActiveQuery;
 use yii\db\ActiveRecord;
 

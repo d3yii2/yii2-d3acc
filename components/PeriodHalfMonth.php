@@ -2,7 +2,6 @@
 
 namespace d3acc\components;
 
-use d3acc\models\AcPeriod;
 
 class PeriodHalfMonth extends PeriodBase
 {

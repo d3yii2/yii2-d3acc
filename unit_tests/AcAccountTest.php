@@ -8,7 +8,6 @@ use d3acc\models\AcDef;
 use d3acc\models\AcRecAcc;
 use d3acc\models\AcTran;
 use d3acc\models\AcPeriod;
-use d3acc\components\PeriodBase;
 use d3acc\components\PeriodMonth;
 use d3acc\models\AcPeriodBalance;
 
@@ -20,7 +19,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
     public $accDef1;
     public $accDef2;
 
-    public function setUp()
+    public function setUp(): void
     {
 
         if ($accs = AcAccount::findAll(['code' => 'Test'])) {
@@ -81,7 +80,7 @@ class AcAccountTest extends \PHPUnit_Framework_TestCase
 
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->deleteAcc($this->acc);
         $this->deleteAcc($this->accD);
