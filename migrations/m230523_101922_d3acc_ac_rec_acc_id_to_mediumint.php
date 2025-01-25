@@ -1,10 +1,19 @@
 <?php
 
 use yii\db\Migration;
+use yii\db\Query;
 
 class m230523_101922_d3acc_ac_rec_acc_id_to_mediumint  extends Migration {
 
-    public function safeUp() { 
+    public function safeUp() {
+        $migrationExists = (new Query())
+            ->from('{{%migration}}')
+            ->where(['version' => 'm241215_172602_d3acc_rec_acc_id_to_mediumint'])
+            ->exists();
+        if ($migrationExists) {
+            echo "Migration already executed. Skipping...\n";
+            return true;
+        }
 
         $this->execute('              
             ALTER TABLE `ac_tran`
