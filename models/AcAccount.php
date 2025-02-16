@@ -85,9 +85,11 @@ class AcAccount extends BaseAcAccount
             foreach(self::$_selfAll as $row){
                 self::$allTableRows[$row->id] = $row;
             }
-            return self::$allTableRows[$condition];
+            if (isset(self::$allTableRows[$condition])) {
+                return self::$allTableRows[$condition];
+            }
         }
-        return parent::findByCondition($condition)->one();
+        return self::$allTableRows[$condition] = parent::findByCondition($condition)->one();
     }
 
     public function afterSave($insert, $changedAttributes)

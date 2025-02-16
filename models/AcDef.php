@@ -22,12 +22,14 @@ class AcDef extends BaseAcDef
     {
         parent::afterSave($insert, $changedAttributes);
         AcDefDictionary::clearCache();
+        self::$_all = null;
     }
 
     public function afterDelete()
     {
         parent::afterDelete();
         AcDefDictionary::clearCache();
+        self::$_all = null;
     }
 
     public static function findByAcAccount(int $acAccountId)
