@@ -20,6 +20,11 @@ class AcRecAcc extends BaseAcRecAcc
      */
     private static array $_acDef = [];
 
+    public static function reInit(): void
+    {
+        self::$_acDef = [];
+    }
+
     /**
      * get record accounts
      * @param int $accId
