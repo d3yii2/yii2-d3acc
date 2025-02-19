@@ -5,6 +5,7 @@ namespace d3acc\models;
 use d3acc\components\AccQueries;
 use d3acc\models\base\AcRecAcc as BaseAcRecAcc;
 use d3system\exceptions\D3ActiveRecordException;
+use RuntimeException;
 use Yii;
 use yii\base\ErrorException;
 use yii\db\Exception;
@@ -128,7 +129,6 @@ class AcRecAcc extends BaseAcRecAcc
         /**
          * create account
          */
-        $db = Yii::$app->db;
         if (!$transaction = Yii::$app->db->beginTransaction()) {
             throw new ErrorException('Can not initiate tran');
         }
@@ -181,7 +181,7 @@ class AcRecAcc extends BaseAcRecAcc
         $model->label      = mb_substr(implode(',', $label),0,100);
         if(!$model->save()){
             $transaction->rollBack();
-            throw new \Exception('Error: ' .json_encode($model->getErrors()));
+            throw new RuntimeException('Error: ' .json_encode($model->getErrors()));
         }
         if ($ref) {
             foreach (self::loadAcDef($accId) as $acDef) {
@@ -203,13 +203,11 @@ class AcRecAcc extends BaseAcRecAcc
 
     public static function loadAcDef(int $accountId)
     {
-        if (isset(self::$_acDef[$accountId])) {
-            return self::$_acDef[$accountId];
-        }
-        return self::$_acDef[$accountId] = AcDef::find()
-            ->where(['account_id' => $accountId])
-            ->orderBy(['id'=>SORT_ASC])
-            ->all();
+        return self::$_acDef[$accountId]
+            ?? (self::$_acDef[$accountId] = AcDef::find()
+                ->where(['account_id' => $accountId])
+                ->orderBy(['id' => SORT_ASC])
+                ->all());
     }
 
     /**
@@ -221,10 +219,12 @@ class AcRecAcc extends BaseAcRecAcc
      * @throws \yii\base\Exception
      * @deprecated use AccQueries::joinRefs()->all()
      */
-    public static function filterAcc(int $accId, int $sysCompanyId, $ref): array
-    {
+    public static function filterAcc(
+        int $accId,
+        int $sysCompanyId,
+        array $ref
+    ): array {
         return AccQueries::joinRefs($accId, $sysCompanyId, $ref)->all();
-
     }
 
     /**
@@ -232,7 +232,14 @@ class AcRecAcc extends BaseAcRecAcc
      * @param int $def_id id from table ac_def
      * @return int
      */
-    public function getRefPkValue(int $def_id){
+    public function getRefPkValue(int $def_id): int
+    {
         return $this->getAcRecRefs()->select('pk_value')->where(['def_id' => $def_id])->scalar();
+    }
+
+    public function afterSave($insert, $changedAttributes): void
+    {
+        parent::afterSave($insert, $changedAttributes);
+        self::$_acDef = [];
     }
 }
