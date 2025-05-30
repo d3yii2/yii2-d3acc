@@ -1226,6 +1226,7 @@ class AcTran extends BaseAcTran
         $queryCredit = (clone $query)
             ->addSelect([
                 'amount' => 'ac_tran.amount',
+                'acTranId' => 'ac_tran.id'
             ])
             ->innerJoin(
                 'ac_tran',
@@ -1241,6 +1242,7 @@ class AcTran extends BaseAcTran
         $queryDebit = (clone $query)
             ->addSelect([
                 'amount' => '-`ac_tran`.`amount`',
+                'acTranId' => 'ac_tran.id'
             ])
             ->innerJoin(
                 'ac_tran',
@@ -1257,6 +1259,7 @@ class AcTran extends BaseAcTran
             $balanceQuery = (clone $query)
                 ->addSelect([
                     'amount' => 'ac_period_balance.amount',
+                    'acTranId' => 'ac_period_balance.id'
                 ])
                 ->innerJoin(
                     'ac_period_balance',

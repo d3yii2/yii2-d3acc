@@ -109,9 +109,14 @@ class AcPeriodBalance extends BaseAcPeriodBalance
         return $amount;
     }
 
-    public static function accBalanceFilter($accountId, AcPeriod $period,
-                                            $filter)
-    {
+    /**
+     * @throws Exception
+     */
+    public static function accBalanceFilter(
+        int $accountId,
+        AcPeriod $period,
+        array $filter
+    ) {
 
         $select = $join   = [];
         foreach (AcAccount::findOne($accountId)->getAcDefs()->all() as $acDef) {
@@ -134,7 +139,9 @@ class AcPeriodBalance extends BaseAcPeriodBalance
         $command    = $connection->createCommand('
             SELECT
                 ac_rec_acc.id,
-                b.amount
+                b.amount,
+                ac_rec_acc.currency_id,
+                ac_rec_acc.label
                 '.implode(PHP_EOL, $select).'
             FROM
               ac_period_balance b
