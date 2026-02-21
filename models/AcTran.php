@@ -663,7 +663,7 @@ class AcTran extends BaseAcTran
     }
 
     /**
-     * Get period transactions for account fith start balance
+     * Get period transactions for an account with start balance
      *
      * @param AcRecAcc $acc
      * @param AcPeriod $period
