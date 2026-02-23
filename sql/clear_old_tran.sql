@@ -114,12 +114,12 @@ WHERE ac_tran.`accounting_date` < @dateTo
 -- process ac_tran_dim
 CREATE TABLE `ac_arch_tran_dim` LIKE `ac_tran_dim`;
 INSERT INTO ac_arch_tran_dim SELECT DISTINCT `ac_tran_dim`.* FROM `ac_tran_dim` INNER JOIN  tmp_ac_tran ON tmp_ac_tran.id = `ac_tran_dim`.tran_id;
-DELETE `ac_tran_dim` FROM `ac_tran_dim` INNER JOIN  tmp_ac_tran ON tmp_ac_tran.id = `ac_tran_dim`.tran_id;
+DELETE `ac_tran_dim` FROM `ac_tran_dim` INNER JOIN  ac_arch_tran_dim ON ac_arch_tran_dim.id = `ac_tran_dim`.id;
 
 -- process ac_tran
 CREATE TABLE `ac_arch_tran` LIKE `ac_tran`;
 INSERT INTO ac_arch_tran SELECT DISTINCT `ac_tran`.* FROM `ac_tran` INNER JOIN  tmp_ac_tran ON tmp_ac_tran.id = `ac_tran`.id;
-DELETE `ac_tran` FROM `ac_tran` INNER JOIN  tmp_ac_tran ON tmp_ac_tran.id = `ac_tran`.id;
+DELETE `ac_tran` FROM `ac_tran` INNER JOIN  ac_arch_tran ON ac_arch_tran.id = `ac_tran`.id;
 
 -- load ac_rec_acc
 DROP TEMPORARY TABLE IF EXISTS tmp_ac_rec_acc;
@@ -155,18 +155,18 @@ FROM
 -- process ac_rec_ref
 CREATE TABLE `ac_arch_rec_ref` LIKE `ac_rec_ref`;
 INSERT INTO ac_arch_rec_ref SELECT DISTINCT `ac_rec_ref`.* FROM `ac_rec_ref` INNER JOIN  tmp_ac_rec_acc ON tmp_ac_rec_acc.id = `ac_rec_ref`.`rec_account_id`;
-DELETE `recRef` FROM `ac_rec_ref` recRef INNER JOIN  tmp_ac_rec_acc ON tmp_ac_rec_acc.id = `recRef`.`rec_account_id`;
+DELETE `recRef` FROM `ac_rec_ref` recRef INNER JOIN  ac_arch_rec_ref ON ac_arch_rec_ref.id = `recRef`.id;
 
 -- process ac_period_balance
 CREATE TABLE `ac_arch_period_balance` LIKE `ac_period_balance`;
 INSERT INTO ac_arch_period_balance SELECT DISTINCT `ac_period_balance`.* FROM `ac_period_balance` INNER JOIN  tmp_ac_rec_acc ON tmp_ac_rec_acc.id = `ac_period_balance`.`rec_acc_id`;
-DELETE `acBalance` FROM `ac_period_balance` acBalance INNER JOIN  tmp_ac_rec_acc ON tmp_ac_rec_acc.id = `acBalance`.`rec_acc_id`;
+DELETE `acBalance` FROM `ac_period_balance` acBalance INNER JOIN  ac_arch_period_balance ON ac_arch_period_balance.id = `acBalance`.`id`;
 
 -- process ac_rec_acc
 CREATE TABLE `ac_arch_rec_acc` LIKE `ac_rec_acc`;
 INSERT INTO ac_arch_rec_acc SELECT DISTINCT `ac_rec_acc`.* FROM `ac_rec_acc` INNER JOIN  tmp_ac_rec_acc ON tmp_ac_rec_acc.id = `ac_rec_acc`.`id`;
-DELETE `recAcc` FROM `ac_rec_acc` recAcc INNER JOIN  tmp_ac_rec_acc ON tmp_ac_rec_acc.id = `recAcc`.`id`;
+DELETE `recAcc` FROM `ac_rec_acc` recAcc INNER JOIN  ac_arch_rec_acc ON ac_arch_rec_acc.id = `recAcc`.`id`;
 
-select 'Finished';
+SELECT 'Finished';
 
 
