@@ -846,16 +846,17 @@ class AcTran extends BaseAcTran
 
     /**
      * for account list get total balance by days for period
-     * 
+     *
      * @param array $accList array of \d3acc\models\AcRecAcc elements
-     * @param AcPeriod $period
+     * @param AcPeriod|null $period
+     * @param int|null $sysCompanyId
      * @return array
-     * @throws Exception
+     * @throws \yii\db\Exception
      */
     public static function accFilterExtPeriodBalanceByDays(
         array $accList,
-        AcPeriod $period = null,
-        int $sysCompanyId = null
+        ?AcPeriod $period = null,
+        ?int $sysCompanyId = null
     )
     {
 
